@@ -1014,6 +1014,207 @@
                 padding: 12px 20px;
             }
         }
+
+        /* Quick Search & QR Scanner */
+        .header-center {
+            flex: 1;
+            max-width: 500px;
+            margin: 0 20px;
+        }
+
+        .quick-search {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .quick-search input {
+            flex: 1;
+            padding: 12px 18px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            font-size: 14px;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+        }
+
+        .quick-search input::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .quick-search input:focus {
+            outline: none;
+            border-color: rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.25);
+        }
+
+        .btn-scan {
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .btn-scan:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Scanner Modal */
+        .scanner-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scanner-modal.active {
+            display: flex;
+        }
+
+        .scanner-container {
+            background: var(--white);
+            border-radius: 24px;
+            width: 90%;
+            max-width: 500px;
+            overflow: hidden;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .scanner-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 2px solid var(--gray-100);
+        }
+
+        .scanner-header h2 {
+            font-size: 18px;
+            color: var(--gray-800);
+        }
+
+        .scanner-close {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--gray-100);
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--gray-500);
+            transition: all 0.2s;
+        }
+
+        .scanner-close:hover {
+            background: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        .scanner-body {
+            position: relative;
+            background: black;
+        }
+
+        .scanner-body video {
+            width: 100%;
+            height: 350px;
+            object-fit: cover;
+        }
+
+        .scanner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .scanner-frame {
+            width: 200px;
+            height: 200px;
+            border: 3px solid var(--primary);
+            border-radius: 20px;
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+            animation: pulse-frame 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-frame {
+            0%, 100% { border-color: var(--primary); }
+            50% { border-color: white; }
+        }
+
+        .scanner-hint {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .scanner-footer {
+            padding: 20px 24px;
+            border-top: 2px solid var(--gray-100);
+            display: flex;
+            justify-content: center;
+        }
+
+        .scanner-footer button {
+            padding: 14px 40px;
+        }
+
+        /* Responsive header */
+        @media (max-width: 900px) {
+            .header-content {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .header-center {
+                max-width: 100%;
+                margin: 0;
+                order: 3;
+                width: 100%;
+            }
+            .header-stats {
+                display: none;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .quick-search {
+                flex-direction: column;
+            }
+            .quick-search input, .btn-scan {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1029,12 +1230,38 @@
                     <span>📁 <span id="categoryCount">0 kategori</span></span>
                 </div>
             </div>
+            <div class="header-center">
+                <div class="quick-search">
+                    <input type="text" id="quickSearch" placeholder="🔍 Makine ID veya ad ara..." onkeyup="quickSearchMachine(event)">
+                    <button class="btn-scan" onclick="openQRScanner()">📷 QR Okut</button>
+                </div>
+            </div>
             <div class="header-right">
                 <div class="user-info">
                     <div class="user-avatar">👤</div>
                     <span id="userEmail"></span>
                 </div>
                 <button class="btn-logout" onclick="logout()">Çıkış Yap</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Scanner Modal -->
+    <div class="scanner-modal" id="scannerModal">
+        <div class="scanner-container">
+            <div class="scanner-header">
+                <h2>📷 QR Kod Okut</h2>
+                <button class="scanner-close" onclick="closeQRScanner()">×</button>
+            </div>
+            <div class="scanner-body">
+                <video id="scannerVideo" autoplay playsinline></video>
+                <div class="scanner-overlay">
+                    <div class="scanner-frame"></div>
+                </div>
+                <p class="scanner-hint">Makine üzerindeki QR kodu kameraya gösterin</p>
+            </div>
+            <div class="scanner-footer">
+                <button class="btn-cancel" onclick="closeQRScanner()">İptal</button>
             </div>
         </div>
     </div>
@@ -1874,8 +2101,136 @@
             link.click();
         }
 
+        // Quick Search - Enter tuşu ile hızlı arama
+        function quickSearchMachine(event) {
+            if (event.key === 'Enter') {
+                const query = document.getElementById('quickSearch').value.trim();
+                if (!query) return;
+
+                // MKN- ile başlıyorsa direkt makine sayfasına git
+                if (query.toUpperCase().startsWith('MKN-')) {
+                    window.location.href = `/makine.html?id=${query}`;
+                    return;
+                }
+
+                // Değilse makine listesinde ara
+                showPanel('list');
+                document.getElementById('filterSearch').value = query;
+                applyFilters();
+            }
+        }
+
+        // QR Scanner Functions
+        let scannerStream = null;
+        let scannerInterval = null;
+
+        async function openQRScanner() {
+            const modal = document.getElementById('scannerModal');
+            const video = document.getElementById('scannerVideo');
+
+            try {
+                // Kamera erişimi iste
+                scannerStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' } // Arka kamera tercih et
+                });
+
+                video.srcObject = scannerStream;
+                modal.classList.add('active');
+
+                // QR kod tarama başlat
+                startQRScanning();
+
+            } catch (err) {
+                console.error('Kamera erişim hatası:', err);
+                if (err.name === 'NotAllowedError') {
+                    alert('Kamera erişimi reddedildi. Lütfen tarayıcı ayarlarından kamera iznini verin.');
+                } else if (err.name === 'NotFoundError') {
+                    alert('Kamera bulunamadı. Lütfen cihazınızda kamera olduğundan emin olun.');
+                } else {
+                    alert('Kamera açılamadı: ' + err.message);
+                }
+            }
+        }
+
+        function closeQRScanner() {
+            const modal = document.getElementById('scannerModal');
+            const video = document.getElementById('scannerVideo');
+
+            // Taramayı durdur
+            if (scannerInterval) {
+                clearInterval(scannerInterval);
+                scannerInterval = null;
+            }
+
+            // Kamera akışını kapat
+            if (scannerStream) {
+                scannerStream.getTracks().forEach(track => track.stop());
+                scannerStream = null;
+            }
+
+            video.srcObject = null;
+            modal.classList.remove('active');
+        }
+
+        function startQRScanning() {
+            const video = document.getElementById('scannerVideo');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Her 200ms'de bir frame kontrol et
+            scannerInterval = setInterval(() => {
+                if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0);
+
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+                // jsQR kütüphanesi varsa kullan
+                if (typeof jsQR !== 'undefined') {
+                    const code = jsQR(imageData.data, canvas.width, canvas.height);
+                    if (code && code.data) {
+                        handleScannedQR(code.data);
+                    }
+                } else {
+                    // jsQR yoksa basit URL pattern kontrolü (demo amaçlı)
+                    // Gerçek implementasyonda jsQR kütüphanesi kullanılmalı
+                    console.log('QR tarama aktif - jsQR kütüphanesi yüklenmemiş');
+                }
+            }, 200);
+        }
+
+        function handleScannedQR(data) {
+            console.log('QR kod okundu:', data);
+
+            // URL'den makine ID'sini çıkart
+            let machineId = null;
+
+            // Bizim URL formatımız: /makine.html?id=MKN-XXXX
+            if (data.includes('makine.html?id=')) {
+                const match = data.match(/[?&]id=([^&]+)/);
+                if (match) machineId = match[1];
+            }
+            // Veya direkt MKN- ID'si
+            else if (data.toUpperCase().includes('MKN-')) {
+                const match = data.match(/(MKN-[A-Z0-9-]+)/i);
+                if (match) machineId = match[1];
+            }
+
+            if (machineId) {
+                closeQRScanner();
+                window.location.href = `/makine.html?id=${machineId}`;
+            } else {
+                console.log('Geçersiz QR kod formatı:', data);
+            }
+        }
+
         // Init
         checkAuth();
     </script>
+
+    <!-- QR Code Scanner Library -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 </body>
 </html>
