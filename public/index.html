@@ -709,6 +709,41 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        @keyframes highlightCard {
+            0% { box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.6), 0 8px 30px rgba(16, 185, 129, 0.3); }
+            50% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.3), 0 8px 30px rgba(16, 185, 129, 0.2); }
+            100% { box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
+        }
+
+        /* Success Banner */
+        .success-banner {
+            background: linear-gradient(135deg, var(--primary-light) 0%, #a7f3d0 100%);
+            border: 2px solid var(--primary);
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideDown 0.4s ease-out;
+        }
+
+        .success-banner .success-icon {
+            font-size: 28px;
+            animation: bounce 0.6s ease-out;
+        }
+
+        .success-banner span:last-child {
+            color: var(--secondary);
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
         .selection-toolbar.active { display: flex; }
 
         .selection-toolbar button {
@@ -1036,6 +1071,10 @@
 
                 <div class="card" id="newQrCard" style="display: none;">
                     <h2><span class="icon">✅</span> Yeni Üretilen QR Kodlar</h2>
+                    <div class="success-banner" id="successBanner" style="display: none;">
+                        <span class="success-icon">🎉</span>
+                        <span id="successMessage">24 adet QR kod başarıyla üretildi!</span>
+                    </div>
                     <div class="selection-toolbar" id="selectionToolbar">
                         <span>✓ <strong id="selectedCount">0</strong> adet seçili</span>
                         <div>
@@ -1265,6 +1304,11 @@
             card.style.display = 'block';
             grid.innerHTML = '<div class="loading"><div class="spinner"></div><span>QR kodlar üretiliyor...</span></div>';
 
+            // Karta scroll yap - kullanıcı üretilen QR kodları hemen görsün
+            setTimeout(() => {
+                card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+
             // Generate IDs
             const qrData = [];
             for (let i = 0; i < count; i++) {
@@ -1290,6 +1334,20 @@
             // Render
             await renderQRGrid(grid, generatedQRs, 'new');
             updateSelectionToolbar();
+
+            // Başarı mesajını göster
+            const successBanner = document.getElementById('successBanner');
+            const successMessage = document.getElementById('successMessage');
+            successMessage.textContent = `${count} adet QR kod başarıyla üretildi!`;
+            successBanner.style.display = 'flex';
+
+            // Tüm QR kodlar render edildikten sonra tekrar scroll yap
+            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            // Başarı bildirimi için kartı vurgula
+            card.style.animation = 'none';
+            card.offsetHeight; // reflow
+            card.style.animation = 'highlightCard 1s ease-out';
         }
 
         async function renderQRGrid(container, qrs, type) {
