@@ -10,46 +10,92 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --primary-light: #d1fae5;
+            --primary-lighter: #ecfdf5;
+            --secondary: #065f46;
+            --white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --info: #3b82f6;
+            --info-light: #dbeafe;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f5;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gray-50);
             min-height: 100vh;
         }
 
         /* Header */
         .header {
-            background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
-            padding: 16px 20px;
+            padding: 0;
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
         }
 
         .header-content {
             max-width: 1400px;
             margin: 0 auto;
+            padding: 16px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 16px;
         }
 
         .header-left {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 16px;
         }
 
-        .header h1 { font-size: 20px; font-weight: 600; }
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
 
         .header-stats {
             display: flex;
-            gap: 20px;
-            font-size: 13px;
+            gap: 24px;
+            font-size: 14px;
             opacity: 0.9;
+        }
+
+        .header-stats span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .header-right {
@@ -58,281 +104,508 @@
             gap: 16px;
         }
 
-        .user-info { font-size: 13px; opacity: 0.9; }
-
-        .btn-logout {
-            padding: 8px 16px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
+        .user-info {
+            font-size: 14px;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .btn-logout:hover { background: rgba(255,255,255,0.3); }
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
 
-        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .btn-logout {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-logout:hover {
+            background: rgba(255,255,255,0.25);
+            transform: translateY(-1px);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
         /* Tabs */
         .tabs {
             display: flex;
             gap: 8px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
+            margin-bottom: 24px;
+            background: var(--white);
+            padding: 8px;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
 
         .tab {
-            padding: 12px 20px;
-            background: white;
+            padding: 14px 28px;
+            background: transparent;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: var(--gray-500);
+            position: relative;
+            overflow: hidden;
         }
 
-        .tab.active { background: #1a73e8; color: white; }
-        .tab:hover:not(.active) { background: #e8e8e8; }
+        .tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .tab.active {
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .tab.active::before { opacity: 1; }
+
+        .tab span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .tab:hover:not(.active) {
+            background: var(--primary-lighter);
+            color: var(--primary-dark);
+        }
 
         .panel { display: none; }
-        .panel.active { display: block; }
+        .panel.active {
+            display: block;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
 
         .card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            margin-bottom: 20px;
+            background: var(--white);
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+            margin-bottom: 24px;
+            border: 1px solid var(--gray-100);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
         }
 
         .card h2 {
-            margin-bottom: 16px;
-            color: #333;
-            font-size: 18px;
+            margin-bottom: 20px;
+            color: var(--gray-800);
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card h2 .icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-lighter);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
         }
 
         .form-row {
             display: flex;
-            gap: 12px;
+            gap: 16px;
             align-items: center;
             flex-wrap: wrap;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
         }
 
-        label { font-weight: 500; font-size: 14px; }
+        label {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--gray-600);
+        }
 
         input, select {
-            padding: 10px 14px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
+            padding: 12px 18px;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.2s;
+            background: var(--gray-50);
         }
 
         input:focus, select:focus {
             outline: none;
-            border-color: #1a73e8;
+            border-color: var(--primary);
+            background: var(--white);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
         }
 
         button {
-            padding: 10px 20px;
-            background: #1a73e8;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
         }
 
-        button:hover { background: #1557b0; }
-        button:disabled { background: #ccc; cursor: not-allowed; }
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        button:hover::before { left: 100%; }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35);
+        }
+
+        button:disabled {
+            background: var(--gray-300);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
 
         /* QR Grid */
         .qr-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 12px;
-            margin-top: 16px;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
         }
 
         .qr-item {
-            background: #fafafa;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            padding: 12px;
+            background: var(--gray-50);
+            border: 2px solid var(--gray-100);
+            border-radius: 16px;
+            padding: 16px;
             text-align: center;
             position: relative;
+            transition: all 0.3s ease;
         }
 
-        .qr-item canvas { width: 100px; height: 100px; }
+        .qr-item:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(16, 185, 129, 0.15);
+        }
+
+        .qr-item canvas {
+            width: 110px !important;
+            height: 110px !important;
+            border-radius: 8px;
+        }
+
         .qr-item .id {
-            font-family: monospace;
-            font-size: 9px;
-            color: #666;
-            margin-top: 6px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 10px;
+            color: var(--gray-500);
+            margin-top: 10px;
             word-break: break-all;
+            background: var(--white);
+            padding: 6px 10px;
+            border-radius: 8px;
         }
 
         .qr-item .qr-status {
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 10px;
-            margin-top: 4px;
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-top: 8px;
             display: inline-block;
+            font-weight: 600;
         }
 
-        .qr-status.available { background: #e8f5e9; color: #2e7d32; }
-        .qr-status.assigned { background: #e3f2fd; color: #1565c0; }
+        .qr-status.available {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+        }
+        .qr-status.assigned {
+            background: var(--info-light);
+            color: var(--info);
+        }
 
         .qr-item .select-check {
             position: absolute;
-            top: 8px;
-            right: 8px;
-            width: 20px;
-            height: 20px;
+            top: 12px;
+            right: 12px;
+            width: 22px;
+            height: 22px;
             cursor: pointer;
+            accent-color: var(--primary);
         }
 
         /* Filters */
         .filters {
             display: grid;
             grid-template-columns: 2fr repeat(3, 1fr) auto;
-            gap: 12px;
-            margin-bottom: 16px;
+            gap: 16px;
+            margin-bottom: 20px;
             align-items: end;
         }
 
         .filter-group {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 8px;
         }
 
-        .filter-group label { font-size: 12px; color: #666; }
+        .filter-group label {
+            font-size: 13px;
+            color: var(--gray-500);
+            font-weight: 600;
+        }
+
         .filter-group input, .filter-group select { width: 100%; }
 
-        .filter-buttons { display: flex; gap: 8px; }
-        .btn-clear { background: #6c757d; }
-        .btn-export { background: #28a745; }
+        .filter-buttons { display: flex; gap: 10px; }
+
+        .btn-clear {
+            background: var(--gray-500);
+        }
+
+        .btn-clear:hover {
+            background: var(--gray-600);
+            box-shadow: 0 8px 25px rgba(107, 114, 128, 0.35);
+        }
+
+        .btn-export {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        }
 
         /* Table */
         .table-container {
             overflow-x: auto;
-            margin: 0 -20px;
-            padding: 0 20px;
+            margin: 0 -28px;
+            padding: 0 28px;
         }
 
         table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             font-size: 14px;
             min-width: 900px;
         }
 
-        thead { background: #f8f9fa; }
+        thead {
+            background: var(--gray-50);
+        }
 
         th {
             text-align: left;
-            padding: 12px 16px;
+            padding: 16px 20px;
             font-weight: 600;
-            color: #333;
-            border-bottom: 2px solid #dee2e6;
+            color: var(--gray-600);
+            border-bottom: 2px solid var(--gray-100);
             cursor: pointer;
             white-space: nowrap;
+            transition: all 0.2s;
         }
 
-        th:hover { background: #e9ecef; }
-        th .sort-icon { margin-left: 4px; opacity: 0.3; }
-        th.sorted .sort-icon { opacity: 1; }
+        th:first-child { border-radius: 12px 0 0 0; }
+        th:last-child { border-radius: 0 12px 0 0; }
+
+        th:hover {
+            background: var(--primary-lighter);
+            color: var(--primary-dark);
+        }
+
+        th .sort-icon { margin-left: 6px; opacity: 0.3; }
+        th.sorted .sort-icon { opacity: 1; color: var(--primary); }
 
         td {
-            padding: 12px 16px;
-            border-bottom: 1px solid #eee;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--gray-100);
+            transition: background 0.2s;
         }
 
-        tr:hover { background: #f8f9fa; }
+        tr:hover td {
+            background: var(--primary-lighter);
+        }
 
-        .machine-name { font-weight: 500; color: #1a73e8; cursor: pointer; }
-        .machine-name:hover { text-decoration: underline; }
-        .machine-id { font-family: monospace; font-size: 10px; color: #888; }
+        .machine-name {
+            font-weight: 600;
+            color: var(--primary-dark);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .machine-name:hover {
+            color: var(--primary);
+        }
+
+        .machine-id {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 11px;
+            color: var(--gray-400);
+            margin-top: 4px;
+        }
 
         /* Badges */
         .badge {
             display: inline-block;
-            padding: 4px 10px;
-            border-radius: 12px;
+            padding: 6px 14px;
+            border-radius: 20px;
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 600;
         }
 
-        .badge-cnc { background: #e3f2fd; color: #1565c0; }
-        .badge-torna { background: #f3e5f5; color: #7b1fa2; }
-        .badge-freze { background: #e8f5e9; color: #2e7d32; }
-        .badge-pres { background: #fff3e0; color: #ef6c00; }
-        .badge-kaynak { background: #ffebee; color: #c62828; }
-        .badge-kompresor { background: #e0f7fa; color: #00838f; }
-        .badge-jenerator { background: #fce4ec; color: #ad1457; }
-        .badge-konveyor { background: #f1f8e9; color: #558b2f; }
-        .badge-robot { background: #ede7f6; color: #4527a0; }
-        .badge-default { background: #f5f5f5; color: #616161; }
+        .badge-cnc { background: var(--info-light); color: var(--info); }
+        .badge-torna { background: #f3e8ff; color: #7c3aed; }
+        .badge-freze { background: var(--primary-light); color: var(--primary-dark); }
+        .badge-pres { background: var(--warning-light); color: #d97706; }
+        .badge-kaynak { background: var(--danger-light); color: var(--danger); }
+        .badge-kompresor { background: #cffafe; color: #0891b2; }
+        .badge-jenerator { background: #fce7f3; color: #db2777; }
+        .badge-konveyor { background: #d9f99d; color: #65a30d; }
+        .badge-robot { background: #ede9fe; color: #7c3aed; }
+        .badge-default { background: var(--gray-100); color: var(--gray-600); }
 
-        .status-aktif { background: #e8f5e9; color: #2e7d32; }
-        .status-bakim { background: #fff3e0; color: #ef6c00; }
-        .status-arizali { background: #ffebee; color: #c62828; }
-        .status-pasif { background: #f5f5f5; color: #616161; }
+        .status-aktif { background: var(--primary-light); color: var(--primary-dark); }
+        .status-bakim { background: var(--warning-light); color: #d97706; }
+        .status-arizali { background: var(--danger-light); color: var(--danger); }
+        .status-pasif { background: var(--gray-100); color: var(--gray-600); }
 
-        .actions { display: flex; gap: 6px; }
-        .btn-small { padding: 6px 12px; font-size: 12px; }
-        .btn-danger { background: #dc3545; }
-        .btn-danger:hover { background: #c82333; }
+        .actions { display: flex; gap: 8px; }
 
-        .empty-state { text-align: center; padding: 60px 20px; color: #666; }
-        .result-count { color: #666; font-size: 13px; margin-bottom: 12px; }
+        .btn-small {
+            padding: 8px 14px;
+            font-size: 13px;
+            border-radius: 10px;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.35);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--gray-400);
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .result-count {
+            color: var(--gray-500);
+            font-size: 14px;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
 
         .loading {
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 40px;
-            color: #666;
+            padding: 60px;
+            color: var(--gray-500);
         }
 
         .spinner {
-            width: 24px;
-            height: 24px;
-            border: 3px solid #eee;
-            border-top-color: #1a73e8;
+            width: 28px;
+            height: 28px;
+            border: 3px solid var(--gray-200);
+            border-top-color: var(--primary);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
-            margin-right: 12px;
+            margin-right: 16px;
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
 
         .footer {
             text-align: center;
-            padding: 20px;
-            color: #999;
-            font-size: 12px;
+            padding: 32px;
+            color: var(--gray-400);
+            font-size: 13px;
         }
 
-        .footer a { color: #1a73e8; text-decoration: none; }
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .footer a:hover { color: var(--primary-dark); }
 
         /* Tanex 24'lü Etiket Yazdırma Stili - A4 */
         .print-area { display: none; }
 
         @media print {
-            @page {
-                size: A4;
-                margin: 0;
-            }
-
+            @page { size: A4; margin: 0; }
             body * { visibility: hidden; }
             .print-area, .print-area * { visibility: visible; }
-
             .print-area {
                 display: block;
                 position: absolute;
@@ -341,7 +614,6 @@
                 width: 210mm;
                 height: 297mm;
             }
-
             .label-sheet {
                 width: 210mm;
                 height: 297mm;
@@ -352,7 +624,6 @@
                 gap: 0;
                 page-break-after: always;
             }
-
             .label-cell {
                 width: 66.7mm;
                 height: 33.8mm;
@@ -363,12 +634,10 @@
                 padding: 2mm;
                 box-sizing: border-box;
             }
-
             .label-cell canvas {
                 width: 20mm !important;
                 height: 20mm !important;
             }
-
             .label-cell .label-id {
                 font-size: 7pt;
                 font-family: monospace;
@@ -377,12 +646,80 @@
                 word-break: break-all;
                 max-width: 60mm;
             }
-
             .label-cell .label-company {
                 font-size: 6pt;
                 color: #666;
                 margin-top: 0.5mm;
             }
+        }
+
+        /* Sub tabs */
+        .sub-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--gray-100);
+            padding-bottom: 16px;
+        }
+
+        .sub-tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            color: var(--gray-500);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -18px;
+            transition: all 0.2s;
+        }
+
+        .sub-tab:hover {
+            color: var(--primary);
+        }
+
+        .sub-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .sub-tab::before { display: none; }
+        .sub-tab:hover { transform: none; box-shadow: none; }
+
+        .sub-panel { display: none; }
+        .sub-panel.active { display: block; }
+
+        /* Selection toolbar */
+        .selection-toolbar {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 14px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .selection-toolbar.active { display: flex; }
+
+        .selection-toolbar button {
+            background: var(--white);
+            color: var(--primary-dark);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .selection-toolbar button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
 
         /* Responsive */
@@ -395,58 +732,28 @@
             .header-content { flex-direction: column; align-items: flex-start; }
             .filters { grid-template-columns: 1fr; }
             .tabs { width: 100%; }
-            .tab { flex: 1; text-align: center; }
+            .tab { flex: 1; text-align: center; padding: 12px 16px; }
         }
 
         @media (max-width: 480px) {
-            .container { padding: 12px; }
+            .container { padding: 16px; }
+            .card { padding: 20px; border-radius: 16px; }
             .qr-grid { grid-template-columns: repeat(2, 1fr); }
         }
 
-        /* Sekme içi alt-sekmeler */
-        .sub-tabs {
+        /* Hint text */
+        .hint {
+            color: var(--gray-500);
+            font-size: 13px;
+            margin-top: 8px;
             display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 12px;
-        }
-
-        .sub-tab {
-            padding: 8px 16px;
-            background: none;
-            border: none;
-            color: #666;
-            cursor: pointer;
-            font-size: 14px;
-            border-bottom: 2px solid transparent;
-            margin-bottom: -13px;
-        }
-
-        .sub-tab.active {
-            color: #1a73e8;
-            border-bottom-color: #1a73e8;
-        }
-
-        .sub-panel { display: none; }
-        .sub-panel.active { display: block; }
-
-        /* Selection toolbar */
-        .selection-toolbar {
-            background: #1a73e8;
-            color: white;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            display: none;
             align-items: center;
-            justify-content: space-between;
+            gap: 6px;
         }
 
-        .selection-toolbar.active { display: flex; }
-        .selection-toolbar button {
-            background: white;
-            color: #1a73e8;
+        .hint svg {
+            width: 16px;
+            height: 16px;
         }
     </style>
 </head>
@@ -454,58 +761,67 @@
     <div class="header">
         <div class="header-content">
             <div class="header-left">
-                <h1>🏭 Glohe Makine Takip</h1>
+                <div class="logo-icon">🏭</div>
+                <div>
+                    <h1>Glohe Makine Takip</h1>
+                </div>
                 <div class="header-stats">
-                    <span id="totalCount">0 makine</span>
-                    <span id="categoryCount">0 kategori</span>
+                    <span>📊 <span id="totalCount">0 makine</span></span>
+                    <span>📁 <span id="categoryCount">0 kategori</span></span>
                 </div>
             </div>
             <div class="header-right">
-                <span class="user-info" id="userEmail"></span>
-                <button class="btn-logout" onclick="logout()">Çıkış</button>
+                <div class="user-info">
+                    <div class="user-avatar">👤</div>
+                    <span id="userEmail"></span>
+                </div>
+                <button class="btn-logout" onclick="logout()">Çıkış Yap</button>
             </div>
         </div>
     </div>
 
     <div class="container">
         <div class="tabs">
-            <button class="tab active" onclick="showPanel('qr')">QR Kodlar</button>
-            <button class="tab" onclick="showPanel('list')">Makine Listesi</button>
+            <button class="tab active" onclick="showPanel('qr')"><span>📱 QR Kodlar</span></button>
+            <button class="tab" onclick="showPanel('list')"><span>📋 Makine Listesi</span></button>
         </div>
 
         <!-- QR Kod Paneli -->
         <div id="qr" class="panel active">
             <div class="sub-tabs">
-                <button class="sub-tab active" onclick="showSubPanel('generate')">Yeni Üret</button>
-                <button class="sub-tab" onclick="showSubPanel('archive')">QR Arşivi</button>
+                <button class="sub-tab active" onclick="showSubPanel('generate')">✨ Yeni Üret</button>
+                <button class="sub-tab" onclick="showSubPanel('archive')">📦 QR Arşivi</button>
             </div>
 
             <!-- Yeni QR Üret -->
             <div id="generate" class="sub-panel active">
                 <div class="card">
-                    <h2>📱 Yeni QR Kodlar Üret</h2>
+                    <h2><span class="icon">📱</span> Yeni QR Kodlar Üret</h2>
                     <div class="form-row">
-                        <label>Adet (Tanex 24'lü sayfa için 24'ün katları önerilir):</label>
-                        <input type="number" id="qrCount" value="24" min="1" max="240" style="width: 80px;">
-                        <button onclick="generateQRCodes()">Üret</button>
+                        <label>Adet:</label>
+                        <input type="number" id="qrCount" value="24" min="1" max="240" style="width: 100px;">
+                        <button onclick="generateQRCodes()">🎲 QR Kod Üret</button>
                     </div>
-                    <p style="color: #666; font-size: 13px; margin-top: 8px;">
-                        Üretilen QR kodlar arşive kaydedilir. İstediğiniz zaman tekrar yazdırabilirsiniz.
+                    <p class="hint">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Tanex 24'lü etiket kağıdı için 24'ün katları önerilir
                     </p>
                 </div>
 
                 <div class="card" id="newQrCard" style="display: none;">
-                    <h2>Yeni Üretilen QR Kodlar</h2>
+                    <h2><span class="icon">✅</span> Yeni Üretilen QR Kodlar</h2>
                     <div class="selection-toolbar" id="selectionToolbar">
-                        <span><strong id="selectedCount">0</strong> adet seçili</span>
+                        <span>✓ <strong id="selectedCount">0</strong> adet seçili</span>
                         <div>
-                            <button onclick="printSelected()">🖨️ Seçilenleri Yazdır (Tanex 24'lü)</button>
+                            <button onclick="printSelected()">🖨️ Seçilenleri Yazdır</button>
                         </div>
                     </div>
                     <div class="form-row">
-                        <button onclick="selectAll()">Tümünü Seç</button>
-                        <button onclick="deselectAll()" style="background: #6c757d;">Seçimi Kaldır</button>
-                        <button onclick="printSelected()" style="background: #28a745;">🖨️ Seçilenleri Yazdır</button>
+                        <button onclick="selectAll()">☑️ Tümünü Seç</button>
+                        <button onclick="deselectAll()" class="btn-clear">✖️ Seçimi Kaldır</button>
+                        <button onclick="printSelected()" class="btn-success">🖨️ Yazdır</button>
                     </div>
                     <div id="qrGrid" class="qr-grid"></div>
                 </div>
@@ -514,22 +830,25 @@
             <!-- QR Arşivi -->
             <div id="archive" class="sub-panel">
                 <div class="card">
-                    <h2>📦 QR Kod Arşivi</h2>
-                    <p style="color: #666; margin-bottom: 16px;">
+                    <h2><span class="icon">📦</span> QR Kod Arşivi</h2>
+                    <p class="hint" style="margin-bottom: 20px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                         Daha önce üretilen tüm QR kodlar. Kaybolan etiketleri tekrar yazdırabilirsiniz.
                     </p>
 
-                    <div class="form-row" style="margin-bottom: 16px;">
+                    <div class="form-row" style="margin-bottom: 20px;">
                         <select id="archiveFilter" onchange="loadArchive()">
                             <option value="all">Tüm QR Kodlar</option>
                             <option value="available">Atanmamış (Boş)</option>
                             <option value="assigned">Makineye Atanmış</option>
                         </select>
-                        <input type="text" id="archiveSearch" placeholder="ID ile ara..." oninput="loadArchive()" style="width: 200px;">
+                        <input type="text" id="archiveSearch" placeholder="🔍 ID ile ara..." oninput="loadArchive()" style="width: 220px;">
                     </div>
 
                     <div class="selection-toolbar" id="archiveSelectionToolbar">
-                        <span><strong id="archiveSelectedCount">0</strong> adet seçili</span>
+                        <span>✓ <strong id="archiveSelectedCount">0</strong> adet seçili</span>
                         <button onclick="printArchiveSelected()">🖨️ Seçilenleri Yazdır</button>
                     </div>
 
@@ -546,27 +865,27 @@
         <!-- Makine Listesi Paneli -->
         <div id="list" class="panel">
             <div class="card">
-                <h2>📋 Kayıtlı Makineler</h2>
+                <h2><span class="icon">📋</span> Kayıtlı Makineler</h2>
 
                 <div class="filters">
                     <div class="filter-group">
-                        <label>Ara</label>
+                        <label>🔍 Ara</label>
                         <input type="text" id="filterSearch" placeholder="Ad, marka, model, seri no..." oninput="applyFilters()">
                     </div>
                     <div class="filter-group">
-                        <label>Kategori</label>
+                        <label>📁 Kategori</label>
                         <select id="filterCategory" onchange="applyFilters()">
                             <option value="">Tümü</option>
                         </select>
                     </div>
                     <div class="filter-group">
-                        <label>Konum</label>
+                        <label>📍 Konum</label>
                         <select id="filterLocation" onchange="applyFilters()">
                             <option value="">Tümü</option>
                         </select>
                     </div>
                     <div class="filter-group">
-                        <label>Durum</label>
+                        <label>🔄 Durum</label>
                         <select id="filterStatus" onchange="applyFilters()">
                             <option value="">Tümü</option>
                             <option value="aktif">Aktif</option>
@@ -577,7 +896,7 @@
                     </div>
                     <div class="filter-buttons">
                         <button class="btn-clear" onclick="clearFilters()">Temizle</button>
-                        <button class="btn-export" onclick="exportToCSV()">Excel</button>
+                        <button class="btn-export" onclick="exportToCSV()">📊 Excel</button>
                     </div>
                 </div>
 
@@ -601,6 +920,9 @@
                 </div>
 
                 <div id="emptyState" class="empty-state" style="display: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                     <p>Henüz kayıtlı makine yok.</p>
                 </div>
 
@@ -661,7 +983,7 @@
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.getElementById(name).classList.add('active');
-            event.target.classList.add('active');
+            event.target.closest('.tab').classList.add('active');
 
             if (name === 'list') loadMachines();
         }
@@ -729,7 +1051,7 @@
 
                 const canvas = document.createElement('canvas');
                 await QRCode.toCanvas(canvas, qr.url || `${SITE_URL}/makine.html?id=${qr.id}`, {
-                    width: 100,
+                    width: 110,
                     margin: 1
                 });
 
@@ -744,7 +1066,7 @@
                 if (qr.makineye_atandi !== undefined) {
                     const statusDiv = document.createElement('div');
                     statusDiv.className = `qr-status ${qr.makineye_atandi ? 'assigned' : 'available'}`;
-                    statusDiv.textContent = qr.makineye_atandi ? 'Atandı' : 'Boş';
+                    statusDiv.textContent = qr.makineye_atandi ? '✓ Atandı' : '○ Boş';
                     div.appendChild(statusDiv);
                 }
 
@@ -1024,7 +1346,7 @@
         }
 
         function getStatusText(s) {
-            return { 'aktif': 'Aktif', 'bakim': 'Bakımda', 'arizali': 'Arızalı', 'pasif': 'Pasif' }[s] || 'Aktif';
+            return { 'aktif': '✓ Aktif', 'bakim': '🔧 Bakımda', 'arizali': '⚠️ Arızalı', 'pasif': '○ Pasif' }[s] || '✓ Aktif';
         }
 
         function renderTable() {
@@ -1042,7 +1364,7 @@
 
             table.style.display = 'table';
             empty.style.display = 'none';
-            count.textContent = `${filteredMachines.length} / ${allMachines.length} makine`;
+            count.textContent = `${filteredMachines.length} / ${allMachines.length} makine gösteriliyor`;
 
             tbody.innerHTML = filteredMachines.map(m => `
                 <tr>
@@ -1057,9 +1379,9 @@
                     <td>${escapeHtml(m.marka) || ''} ${escapeHtml(m.model) || ''}</td>
                     <td>
                         <div class="actions">
-                            <button class="btn-small" onclick="openMachine('${escapeHtml(m.id)}')">Düzenle</button>
-                            <button class="btn-small" onclick="printSingleQR('${escapeHtml(m.id)}')" style="background:#28a745">QR</button>
-                            <button class="btn-small btn-danger" onclick="deleteMachine('${escapeHtml(m.id)}')">Sil</button>
+                            <button class="btn-small" onclick="openMachine('${escapeHtml(m.id)}')">✏️ Düzenle</button>
+                            <button class="btn-small btn-success" onclick="printSingleQR('${escapeHtml(m.id)}')">📱 QR</button>
+                            <button class="btn-small btn-danger" onclick="deleteMachine('${escapeHtml(m.id)}')">🗑️</button>
                         </div>
                     </td>
                 </tr>
