@@ -448,6 +448,49 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
+        /* Guest mode banner */
+        .guest-banner {
+            background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+            border: 1px solid #3b82f6;
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideDown 0.4s ease-out;
+        }
+
+        .guest-banner .guest-icon {
+            font-size: 24px;
+        }
+
+        .guest-banner .guest-text {
+            flex: 1;
+        }
+
+        .guest-banner .guest-text strong {
+            color: #1e40af;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .guest-banner .guest-text span {
+            color: #3b82f6;
+            font-size: 13px;
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            padding: 10px 20px;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .btn-login:hover {
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        }
+
         /* Footer */
         .footer {
             text-align: center;
@@ -563,6 +606,16 @@
                 ⚠️ Bu makine henüz tanımlanmamış
             </div>
 
+            <!-- Guest Mode Banner -->
+            <div id="guestBanner" class="guest-banner" style="display: none;">
+                <span class="guest-icon">👁️</span>
+                <div class="guest-text">
+                    <strong>Görüntüleme Modu</strong>
+                    <span>Düzenleme yapmak için giriş yapın</span>
+                </div>
+                <button class="btn-login" onclick="redirectToLogin()">🔐 Giriş Yap</button>
+            </div>
+
             <!-- View Mode -->
             <div id="viewMode" style="display: none;">
                 <div class="info-box">
@@ -615,7 +668,7 @@
 
                 <div id="viewPhotos" class="photo-gallery" style="display: none;"></div>
 
-                <button onclick="showEditMode()">✏️ Düzenle</button>
+                <button id="editBtn" onclick="showEditMode()" style="display: none;">✏️ Düzenle</button>
             </div>
 
             <!-- Edit Mode -->
@@ -790,6 +843,7 @@
         let machineData = null;
         let photos = [null, null, null];
         let currentPhotoIndex = 0;
+        let isAuthenticated = false; // Kullanıcı giriş yapmış mı?
 
         // XSS Koruması - HTML escape fonksiyonu
         function escapeHtml(text) {
@@ -811,31 +865,37 @@
             document.getElementById('machineId').textContent = escapeHtml(machineId);
         }
 
-        // Auth check - geliştirilmiş oturum kontrolü
+        // Auth check - geliştirilmiş oturum kontrolü (login'e yönlendirmez)
         async function checkAuth() {
             try {
-                // Önce mevcut oturumu kontrol et
                 const { data: { session }, error } = await supabase.auth.getSession();
 
                 if (error) {
                     console.error('Oturum kontrolü hatası:', error);
+                    return false;
                 }
 
                 if (session) {
                     console.log('Oturum aktif:', session.user.email);
+                    isAuthenticated = true;
                     return true;
                 }
 
-                // Oturum yoksa, URL'deki return parametresini kaydet ve login'e yönlendir
-                const currentUrl = window.location.href;
-                const returnUrl = encodeURIComponent(currentUrl);
-                window.location.href = `/login.html?return=${returnUrl}`;
+                console.log('Oturum yok - misafir modu');
+                isAuthenticated = false;
                 return false;
             } catch (err) {
                 console.error('Auth check hatası:', err);
-                window.location.href = '/login.html';
+                isAuthenticated = false;
                 return false;
             }
+        }
+
+        // Login sayfasına yönlendir
+        function redirectToLogin() {
+            const currentUrl = window.location.href;
+            const returnUrl = encodeURIComponent(currentUrl);
+            window.location.href = `/login.html?return=${returnUrl}`;
         }
 
         // Load machine data
@@ -845,7 +905,8 @@
                 return;
             }
 
-            if (!await checkAuth()) return;
+            // Önce auth kontrolü yap (yönlendirme yapmaz)
+            await checkAuth();
 
             try {
                 const { data, error } = await supabase
@@ -858,6 +919,7 @@
                 document.getElementById('statusBox').style.display = 'block';
 
                 if (data) {
+                    // Kayıtlı makine var - görüntüle
                     isNewMachine = false;
                     machineData = data;
 
@@ -868,21 +930,67 @@
 
                     showViewMode();
                     populateViewMode(data);
-                    populateForm(data);
+
+                    // Sadece giriş yapmışsa düzenleme butonunu ve formu hazırla
+                    if (isAuthenticated) {
+                        document.getElementById('editBtn').style.display = 'block';
+                        populateForm(data);
+                    } else {
+                        // Misafir modunda banner göster
+                        document.getElementById('guestBanner').style.display = 'flex';
+                        document.getElementById('editBtn').style.display = 'none';
+                    }
 
                     document.getElementById('statusBox').className = 'status registered';
                     document.getElementById('statusBox').innerHTML = '✅ Kayıtlı Makine';
                     document.getElementById('pageTitle').textContent = data.ad || 'Makine Bilgisi';
                 } else {
-                    showEditMode();
+                    // Kayıtlı makine yok
+                    if (isAuthenticated) {
+                        // Giriş yapmış - kayıt formu göster
+                        showEditMode();
+                    } else {
+                        // Misafir - bilgi mesajı göster
+                        document.getElementById('guestBanner').style.display = 'flex';
+                        document.getElementById('statusBox').className = 'status new';
+                        document.getElementById('statusBox').innerHTML = '⚠️ Bu makine henüz tanımlanmamış';
+
+                        // Boş bilgi kartı göster
+                        showViewModeEmpty();
+                    }
                 }
 
             } catch (error) {
                 console.error('Veri yüklenirken hata:', error);
                 document.getElementById('loadingState').style.display = 'none';
                 document.getElementById('statusBox').style.display = 'block';
-                showEditMode();
+
+                if (isAuthenticated) {
+                    showEditMode();
+                } else {
+                    document.getElementById('guestBanner').style.display = 'flex';
+                    showViewModeEmpty();
+                }
             }
+        }
+
+        // Misafir modu için boş görüntüleme
+        function showViewModeEmpty() {
+            document.getElementById('viewMode').style.display = 'block';
+            document.getElementById('editMode').style.display = 'none';
+            document.getElementById('editBtn').style.display = 'none';
+
+            // Tüm alanları "-" olarak ayarla
+            document.getElementById('viewAd').textContent = 'Henüz tanımlanmamış';
+            document.getElementById('viewKonum').textContent = '-';
+            document.getElementById('viewKategori').textContent = '-';
+            document.getElementById('viewDurum').textContent = '-';
+            document.getElementById('viewSorumlu').textContent = '-';
+            document.getElementById('viewTelefon').textContent = '-';
+            document.getElementById('viewMarkaModel').textContent = '-';
+            document.getElementById('viewSeriNo').textContent = '-';
+            document.getElementById('viewUretimYili').textContent = '-';
+            document.getElementById('viewGarantiBitis').textContent = '-';
         }
 
         function populateViewMode(data) {
