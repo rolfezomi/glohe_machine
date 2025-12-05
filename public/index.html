@@ -507,15 +507,14 @@
             font-weight: 600;
         }
 
-        .badge-cnc { background: var(--info-light); color: var(--info); }
-        .badge-torna { background: #f3e8ff; color: #7c3aed; }
-        .badge-freze { background: var(--primary-light); color: var(--primary-dark); }
-        .badge-pres { background: var(--warning-light); color: #d97706; }
-        .badge-kaynak { background: var(--danger-light); color: var(--danger); }
-        .badge-kompresor { background: #cffafe; color: #0891b2; }
-        .badge-jenerator { background: #fce7f3; color: #db2777; }
-        .badge-konveyor { background: #d9f99d; color: #65a30d; }
-        .badge-robot { background: #ede9fe; color: #7c3aed; }
+        .badge-dolum { background: var(--info-light); color: var(--info); }
+        .badge-tank { background: #cffafe; color: #0891b2; }
+        .badge-bilgisayar { background: #f3e8ff; color: #7c3aed; }
+        .badge-telefon { background: var(--primary-light); color: var(--primary-dark); }
+        .badge-yazici { background: var(--warning-light); color: #d97706; }
+        .badge-tablet { background: #fce7f3; color: #db2777; }
+        .badge-terminal { background: #d9f99d; color: #65a30d; }
+        .badge-arac { background: #ede9fe; color: #7c3aed; }
         .badge-default { background: var(--gray-100); color: var(--gray-600); }
 
         .status-aktif { background: var(--primary-light); color: var(--primary-dark); }
@@ -2016,7 +2015,16 @@
         }
 
         function getCategoryClass(cat) {
-            const map = { 'CNC': 'badge-cnc', 'Torna': 'badge-torna', 'Freze': 'badge-freze', 'Pres': 'badge-pres', 'Kaynak': 'badge-kaynak', 'Kompresör': 'badge-kompresor', 'Jeneratör': 'badge-jenerator', 'Konveyör': 'badge-konveyor', 'Robot': 'badge-robot' };
+            const map = {
+                'Dolum Makinesi': 'badge-dolum',
+                'Tank': 'badge-tank',
+                'Bilgisayar': 'badge-bilgisayar',
+                'Telefon': 'badge-telefon',
+                'Yazıcı': 'badge-yazici',
+                'Tablet': 'badge-tablet',
+                'El Terminali': 'badge-terminal',
+                'Araç': 'badge-arac'
+            };
             return map[cat] || 'badge-default';
         }
 
