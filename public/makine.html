@@ -991,25 +991,40 @@
             const file = event.target.files[0];
             if (!file) return;
 
-            // Optimize and convert to base64
-            const optimized = await optimizeImage(file);
-            photos[currentPhotoIndex] = optimized;
-            showPhotoPreview(currentPhotoIndex, optimized);
+            // Dosya boyutu kontrolü (10MB max)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('Fotoğraf boyutu 10MB\'dan büyük olamaz.');
+                event.target.value = '';
+                return;
+            }
+
+            try {
+                // Optimize and convert to base64
+                const optimized = await optimizeImage(file);
+                photos[currentPhotoIndex] = optimized;
+                showPhotoPreview(currentPhotoIndex, optimized);
+                console.log(`Fotoğraf ${currentPhotoIndex + 1} optimize edildi: ${Math.round(optimized.length / 1024)} KB`);
+            } catch (err) {
+                console.error('Fotoğraf yükleme hatası:', err);
+                alert('Fotoğraf yüklenirken bir hata oluştu. Lütfen farklı bir fotoğraf deneyin.');
+            }
 
             event.target.value = '';
         }
 
         async function optimizeImage(file) {
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 const reader = new FileReader();
+                reader.onerror = () => reject(new Error('Dosya okunamadı'));
                 reader.onload = (e) => {
                     const img = new Image();
+                    img.onerror = () => reject(new Error('Görsel yüklenemedi'));
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
 
-                        // Max dimensions
-                        const MAX_SIZE = 800;
+                        // Mobil için daha küçük boyut - 600px max
+                        const MAX_SIZE = 600;
                         let width = img.width;
                         let height = img.height;
 
@@ -1025,13 +1040,24 @@
                             }
                         }
 
-                        canvas.width = width;
-                        canvas.height = height;
-                        ctx.drawImage(img, 0, 0, width, height);
+                        canvas.width = Math.floor(width);
+                        canvas.height = Math.floor(height);
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                        // Convert to JPEG with 70% quality
-                        const optimized = canvas.toDataURL('image/jpeg', 0.7);
-                        resolve(optimized);
+                        // Daha agresif sıkıştırma - %50 kalite (mobil için optimize)
+                        const optimized = canvas.toDataURL('image/jpeg', 0.5);
+
+                        // Boyut kontrolü - 500KB'dan büyükse daha fazla sıkıştır
+                        if (optimized.length > 500000) {
+                            const smallerCanvas = document.createElement('canvas');
+                            const smallerCtx = smallerCanvas.getContext('2d');
+                            smallerCanvas.width = Math.floor(canvas.width * 0.7);
+                            smallerCanvas.height = Math.floor(canvas.height * 0.7);
+                            smallerCtx.drawImage(canvas, 0, 0, smallerCanvas.width, smallerCanvas.height);
+                            resolve(smallerCanvas.toDataURL('image/jpeg', 0.4));
+                        } else {
+                            resolve(optimized);
+                        }
                     };
                     img.src = e.target.result;
                 };
@@ -1084,6 +1110,34 @@
             btn.disabled = true;
             btn.textContent = 'Kaydediliyor...';
 
+            // Oturum kontrolü
+            try {
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                if (!session) {
+                    alert('Oturumunuz sonlanmış. Lütfen tekrar giriş yapın.');
+                    const returnUrl = encodeURIComponent(window.location.href);
+                    window.location.href = `/login.html?return=${returnUrl}`;
+                    return;
+                }
+            } catch (authErr) {
+                console.error('Auth kontrolü hatası:', authErr);
+                alert('Oturum kontrolü başarısız. Lütfen sayfayı yenileyin.');
+                btn.disabled = false;
+                btn.textContent = isNewMachine ? '💾 Kaydet' : '💾 Güncelle';
+                return;
+            }
+
+            // Fotoğraf boyutlarını kontrol et ve logla
+            let totalPhotoSize = 0;
+            for (let i = 0; i < photos.length; i++) {
+                if (photos[i]) {
+                    const size = photos[i].length;
+                    totalPhotoSize += size;
+                    console.log(`Fotoğraf ${i+1} boyutu: ${Math.round(size/1024)} KB`);
+                }
+            }
+            console.log(`Toplam fotoğraf boyutu: ${Math.round(totalPhotoSize/1024)} KB`);
+
             const data = {
                 id: machineId,
                 ad: document.getElementById('ad').value,
@@ -1104,12 +1158,21 @@
                 guncelleme_tarihi: new Date().toISOString()
             };
 
+            // Yeni kayıt ise kayit_tarihi ekle
+            if (isNewMachine) {
+                data.kayit_tarihi = new Date().toISOString();
+            }
+
             try {
+                console.log('Kayıt başlatılıyor...');
                 const { error } = await supabase
                     .from('makineler')
                     .upsert(data);
 
-                if (error) throw error;
+                if (error) {
+                    console.error('Supabase hatası:', error);
+                    throw error;
+                }
 
                 document.getElementById('successMessage').style.display = 'block';
                 setTimeout(() => {
@@ -1127,7 +1190,31 @@
 
             } catch (error) {
                 console.error('Kayıt hatası:', error);
-                alert('Kayıt sırasında bir hata oluştu!');
+                let errorMessage = 'Kayıt sırasında bir hata oluştu!';
+
+                // Detaylı hata mesajı
+                if (error.message) {
+                    errorMessage += '\n\nHata: ' + error.message;
+                }
+                if (error.code) {
+                    errorMessage += '\nKod: ' + error.code;
+                }
+                if (error.details) {
+                    errorMessage += '\nDetay: ' + error.details;
+                }
+
+                // Yaygın hata türleri için özel mesajlar
+                if (error.message && error.message.includes('JWT')) {
+                    errorMessage = 'Oturum süresi dolmuş. Lütfen sayfayı yenileyip tekrar giriş yapın.';
+                } else if (error.message && error.message.includes('network')) {
+                    errorMessage = 'İnternet bağlantınızı kontrol edin ve tekrar deneyin.';
+                } else if (error.code === '23505') {
+                    errorMessage = 'Bu makine zaten kayıtlı.';
+                } else if (totalPhotoSize > 3000000) {
+                    errorMessage = 'Fotoğraflar çok büyük. Lütfen daha küçük fotoğraflar seçin.';
+                }
+
+                alert(errorMessage);
             } finally {
                 btn.disabled = false;
                 btn.textContent = '💾 Güncelle';
