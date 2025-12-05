@@ -602,53 +602,79 @@
         .print-area { display: none; }
 
         @media print {
-            @page { size: A4; margin: 0; }
+            @page {
+                size: A4;
+                margin: 0;
+            }
+
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
             body * { visibility: hidden; }
             .print-area, .print-area * { visibility: visible; }
+
             .print-area {
                 display: block;
                 position: absolute;
                 left: 0;
                 top: 0;
                 width: 210mm;
-                height: 297mm;
             }
+
             .label-sheet {
                 width: 210mm;
                 height: 297mm;
-                padding: 3.8mm 4.7mm 8.8mm 4.7mm; /* üst 5mm yukarı kaydırıldı */
+                padding: 8.8mm 4.7mm 8.8mm 4.7mm;
                 display: grid;
                 grid-template-columns: repeat(3, 66.7mm);
                 grid-template-rows: repeat(8, 33.8mm);
                 gap: 0;
                 page-break-after: always;
+                page-break-inside: avoid;
+                box-sizing: border-box;
             }
+
             .label-cell {
                 width: 66.7mm;
                 height: 33.8mm;
+                max-height: 33.8mm;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                padding: 2mm;
+                padding: 1.5mm;
                 box-sizing: border-box;
+                overflow: hidden;
+                page-break-inside: avoid;
             }
-            .label-cell canvas {
-                width: 20mm !important;
-                height: 20mm !important;
+
+            .label-cell img {
+                width: 18mm !important;
+                height: 18mm !important;
+                max-width: 18mm !important;
+                max-height: 18mm !important;
+                flex-shrink: 0;
             }
+
             .label-cell .label-id {
-                font-size: 7pt;
+                font-size: 6pt;
                 font-family: monospace;
                 margin-top: 1mm;
                 text-align: center;
                 word-break: break-all;
-                max-width: 60mm;
+                max-width: 62mm;
+                line-height: 1.1;
+                overflow: hidden;
+                max-height: 8mm;
             }
+
             .label-cell .label-company {
-                font-size: 6pt;
+                font-size: 5pt;
                 color: #666;
                 margin-top: 0.5mm;
+                flex-shrink: 0;
             }
         }
 
@@ -906,48 +932,58 @@
         .preview-page {
             background: white;
             width: 210mm;
-            min-height: 297mm;
+            height: 297mm;
             margin: 0 auto 24px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            padding: 3.8mm 4.7mm 8.8mm 4.7mm; /* üst 5mm yukarı kaydırıldı */
+            padding: 8.8mm 4.7mm 8.8mm 4.7mm;
             display: grid;
             grid-template-columns: repeat(3, 66.7mm);
             grid-template-rows: repeat(8, 33.8mm);
             gap: 0;
             transform-origin: top center;
+            box-sizing: border-box;
         }
 
         .preview-label {
             width: 66.7mm;
             height: 33.8mm;
+            max-height: 33.8mm;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 2mm;
+            padding: 1.5mm;
             box-sizing: border-box;
             border: 1px dashed var(--gray-200);
+            overflow: hidden;
         }
 
-        .preview-label canvas {
-            width: 20mm !important;
-            height: 20mm !important;
+        .preview-label img {
+            width: 18mm !important;
+            height: 18mm !important;
+            max-width: 18mm !important;
+            max-height: 18mm !important;
+            flex-shrink: 0;
         }
 
         .preview-label .preview-label-id {
-            font-size: 7pt;
+            font-size: 6pt;
             font-family: 'SF Mono', Monaco, monospace;
             margin-top: 1mm;
             text-align: center;
             word-break: break-all;
-            max-width: 60mm;
+            max-width: 62mm;
             color: var(--gray-600);
+            line-height: 1.1;
+            overflow: hidden;
+            max-height: 8mm;
         }
 
         .preview-label .preview-label-company {
-            font-size: 6pt;
+            font-size: 5pt;
             color: var(--gray-400);
             margin-top: 0.5mm;
+            flex-shrink: 0;
         }
 
         .preview-label.empty {
