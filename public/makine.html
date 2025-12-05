@@ -612,7 +612,25 @@
         let photos = [null, null, null];
         let currentPhotoIndex = 0;
 
-        document.getElementById('machineId').textContent = machineId || 'Geçersiz ID';
+        // XSS Koruması - HTML escape fonksiyonu
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ID doğrulama - sadece güvenli karakterlere izin ver
+        function isValidMachineId(id) {
+            return id && /^[A-Z0-9\-]+$/i.test(id);
+        }
+
+        if (!isValidMachineId(machineId)) {
+            document.getElementById('machineId').textContent = 'Geçersiz ID';
+            document.getElementById('loadingState').innerHTML = '<p style="color: red;">Geçersiz makine ID formatı!</p>';
+        } else {
+            document.getElementById('machineId').textContent = escapeHtml(machineId);
+        }
 
         // Auth check
         async function checkAuth() {
@@ -626,7 +644,7 @@
 
         // Load machine data
         async function loadMachine() {
-            if (!machineId) {
+            if (!machineId || !isValidMachineId(machineId)) {
                 alert('Geçersiz makine ID!');
                 return;
             }
@@ -672,15 +690,15 @@
         }
 
         function populateViewMode(data) {
-            document.getElementById('viewAd').textContent = data.ad || '-';
-            document.getElementById('viewKonum').textContent = data.konum || '-';
-            document.getElementById('viewKategori').textContent = data.kategori || '-';
+            document.getElementById('viewAd').textContent = escapeHtml(data.ad) || '-';
+            document.getElementById('viewKonum').textContent = escapeHtml(data.konum) || '-';
+            document.getElementById('viewKategori').textContent = escapeHtml(data.kategori) || '-';
             document.getElementById('viewDurum').textContent = getStatusText(data.durum);
-            document.getElementById('viewSorumlu').textContent = data.sorumlu_adi || '-';
-            document.getElementById('viewTelefon').textContent = data.sorumlu_telefon || '-';
+            document.getElementById('viewSorumlu').textContent = escapeHtml(data.sorumlu_adi) || '-';
+            document.getElementById('viewTelefon').textContent = escapeHtml(data.sorumlu_telefon) || '-';
             document.getElementById('viewMarkaModel').textContent =
-                (data.marka || data.model) ? `${data.marka || ''} ${data.model || ''}`.trim() : '-';
-            document.getElementById('viewSeriNo').textContent = data.seri_no || '-';
+                (data.marka || data.model) ? `${escapeHtml(data.marka) || ''} ${escapeHtml(data.model) || ''}`.trim() : '-';
+            document.getElementById('viewSeriNo').textContent = escapeHtml(data.seri_no) || '-';
             document.getElementById('viewUretimYili').textContent = data.uretim_yili || '-';
             document.getElementById('viewGarantiBitis').textContent =
                 data.garanti_bitis ? new Date(data.garanti_bitis).toLocaleDateString('tr-TR') : '-';

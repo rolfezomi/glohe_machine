@@ -632,6 +632,14 @@
         let sortColumn = 'ad';
         let sortDirection = 'asc';
 
+        // XSS Koruması - HTML escape fonksiyonu
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         // Auth
         async function checkAuth() {
             const { data: { session } } = await supabase.auth.getSession();
@@ -1039,19 +1047,19 @@
             tbody.innerHTML = filteredMachines.map(m => `
                 <tr>
                     <td>
-                        <span class="machine-name" onclick="openMachine('${m.id}')">${m.ad || 'İsimsiz'}</span>
-                        <div class="machine-id">${m.id}</div>
+                        <span class="machine-name" onclick="openMachine('${escapeHtml(m.id)}')">${escapeHtml(m.ad) || 'İsimsiz'}</span>
+                        <div class="machine-id">${escapeHtml(m.id)}</div>
                     </td>
-                    <td>${m.konum || '-'}</td>
-                    <td>${m.kategori ? `<span class="badge ${getCategoryClass(m.kategori)}">${m.kategori}</span>` : '-'}</td>
+                    <td>${escapeHtml(m.konum) || '-'}</td>
+                    <td>${m.kategori ? `<span class="badge ${getCategoryClass(m.kategori)}">${escapeHtml(m.kategori)}</span>` : '-'}</td>
                     <td><span class="badge status-${m.durum || 'aktif'}">${getStatusText(m.durum)}</span></td>
-                    <td>${m.sorumlu_adi || '-'}</td>
-                    <td>${m.marka || ''} ${m.model || ''}</td>
+                    <td>${escapeHtml(m.sorumlu_adi) || '-'}</td>
+                    <td>${escapeHtml(m.marka) || ''} ${escapeHtml(m.model) || ''}</td>
                     <td>
                         <div class="actions">
-                            <button class="btn-small" onclick="openMachine('${m.id}')">Düzenle</button>
-                            <button class="btn-small" onclick="printSingleQR('${m.id}')" style="background:#28a745">QR</button>
-                            <button class="btn-small btn-danger" onclick="deleteMachine('${m.id}')">Sil</button>
+                            <button class="btn-small" onclick="openMachine('${escapeHtml(m.id)}')">Düzenle</button>
+                            <button class="btn-small" onclick="printSingleQR('${escapeHtml(m.id)}')" style="background:#28a745">QR</button>
+                            <button class="btn-small btn-danger" onclick="deleteMachine('${escapeHtml(m.id)}')">Sil</button>
                         </div>
                     </td>
                 </tr>
