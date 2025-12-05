@@ -1301,6 +1301,8 @@
 
             const grid = document.getElementById('qrGrid');
             const card = document.getElementById('newQrCard');
+
+            // Kartı hemen göster
             card.style.display = 'block';
             grid.innerHTML = '<div class="loading"><div class="spinner"></div><span>QR kodlar üretiliyor...</span></div>';
 
@@ -1309,84 +1311,116 @@
                 card.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 100);
 
-            // Generate IDs
-            const qrData = [];
-            for (let i = 0; i < count; i++) {
-                const id = 'MKN-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
-                const url = `${SITE_URL}/makine.html?id=${id}`;
-                qrData.push({ id, url, olusturma_tarihi: new Date().toISOString() });
-                generatedQRs.push({ id, url });
-
-                // Small delay to ensure unique timestamps
-                await new Promise(r => setTimeout(r, 2));
-            }
-
-            // Save to Supabase
             try {
-                const { error } = await supabase.from('qr_kodlar').insert(
-                    qrData.map(q => ({ id: q.id, olusturma_tarihi: q.olusturma_tarihi }))
-                );
-                if (error) console.error('QR kayıt hatası:', error);
-            } catch (e) {
-                console.error('QR kayıt hatası:', e);
+                // Generate IDs
+                const qrData = [];
+                for (let i = 0; i < count; i++) {
+                    const id = 'MKN-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+                    const url = `${SITE_URL}/makine.html?id=${id}`;
+                    qrData.push({ id, url, olusturma_tarihi: new Date().toISOString() });
+                    generatedQRs.push({ id, url });
+
+                    // Small delay to ensure unique timestamps
+                    await new Promise(r => setTimeout(r, 2));
+                }
+
+                console.log('Üretilen QR sayısı:', generatedQRs.length);
+
+                // Save to Supabase (hata olsa bile devam et)
+                try {
+                    const { error } = await supabase.from('qr_kodlar').insert(
+                        qrData.map(q => ({ id: q.id, olusturma_tarihi: q.olusturma_tarihi }))
+                    );
+                    if (error) {
+                        console.warn('QR Supabase kayıt hatası (devam ediliyor):', error.message);
+                    }
+                } catch (e) {
+                    console.warn('QR Supabase kayıt hatası (devam ediliyor):', e.message);
+                }
+
+                // Render QR codes
+                console.log('QR kodlar render ediliyor...');
+                await renderQRGrid(grid, generatedQRs, 'new');
+                console.log('QR kodlar render edildi');
+
+                updateSelectionToolbar();
+
+                // Başarı mesajını göster
+                const successBanner = document.getElementById('successBanner');
+                const successMessage = document.getElementById('successMessage');
+                successMessage.textContent = `${count} adet QR kod başarıyla üretildi!`;
+                successBanner.style.display = 'flex';
+
+                // Tüm QR kodlar render edildikten sonra tekrar scroll yap
+                card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                // Başarı bildirimi için kartı vurgula
+                card.style.animation = 'none';
+                card.offsetHeight; // reflow
+                card.style.animation = 'highlightCard 1s ease-out';
+
+            } catch (error) {
+                console.error('QR üretim hatası:', error);
+                grid.innerHTML = `<div class="empty-state" style="color: #ef4444;">
+                    <p>❌ QR kod üretilirken hata oluştu!</p>
+                    <p style="font-size: 12px; margin-top: 8px;">${error.message || 'Bilinmeyen hata'}</p>
+                </div>`;
             }
-
-            // Render
-            await renderQRGrid(grid, generatedQRs, 'new');
-            updateSelectionToolbar();
-
-            // Başarı mesajını göster
-            const successBanner = document.getElementById('successBanner');
-            const successMessage = document.getElementById('successMessage');
-            successMessage.textContent = `${count} adet QR kod başarıyla üretildi!`;
-            successBanner.style.display = 'flex';
-
-            // Tüm QR kodlar render edildikten sonra tekrar scroll yap
-            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-            // Başarı bildirimi için kartı vurgula
-            card.style.animation = 'none';
-            card.offsetHeight; // reflow
-            card.style.animation = 'highlightCard 1s ease-out';
         }
 
         async function renderQRGrid(container, qrs, type) {
             container.innerHTML = '';
 
-            for (const qr of qrs) {
-                const div = document.createElement('div');
-                div.className = 'qr-item';
-                div.dataset.id = qr.id;
-
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.className = 'select-check';
-                checkbox.checked = type === 'new' ? selectedQRs.has(qr.id) : archiveSelectedQRs.has(qr.id);
-                checkbox.onchange = () => toggleSelect(qr.id, type);
-
-                const canvas = document.createElement('canvas');
-                await QRCode.toCanvas(canvas, qr.url || `${SITE_URL}/makine.html?id=${qr.id}`, {
-                    width: 110,
-                    margin: 1
-                });
-
-                const idDiv = document.createElement('div');
-                idDiv.className = 'id';
-                idDiv.textContent = qr.id;
-
-                div.appendChild(checkbox);
-                div.appendChild(canvas);
-                div.appendChild(idDiv);
-
-                if (qr.makineye_atandi !== undefined) {
-                    const statusDiv = document.createElement('div');
-                    statusDiv.className = `qr-status ${qr.makineye_atandi ? 'assigned' : 'available'}`;
-                    statusDiv.textContent = qr.makineye_atandi ? '✓ Atandı' : '○ Boş';
-                    div.appendChild(statusDiv);
-                }
-
-                container.appendChild(div);
+            if (!qrs || qrs.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>Görüntülenecek QR kod yok.</p></div>';
+                return;
             }
+
+            console.log('renderQRGrid başladı, QR sayısı:', qrs.length);
+
+            for (let i = 0; i < qrs.length; i++) {
+                const qr = qrs[i];
+                try {
+                    const div = document.createElement('div');
+                    div.className = 'qr-item';
+                    div.dataset.id = qr.id;
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'select-check';
+                    checkbox.checked = type === 'new' ? selectedQRs.has(qr.id) : archiveSelectedQRs.has(qr.id);
+                    checkbox.onchange = () => toggleSelect(qr.id, type);
+
+                    const canvas = document.createElement('canvas');
+                    const qrUrl = qr.url || `${SITE_URL}/makine.html?id=${qr.id}`;
+
+                    await QRCode.toCanvas(canvas, qrUrl, {
+                        width: 110,
+                        margin: 1
+                    });
+
+                    const idDiv = document.createElement('div');
+                    idDiv.className = 'id';
+                    idDiv.textContent = qr.id;
+
+                    div.appendChild(checkbox);
+                    div.appendChild(canvas);
+                    div.appendChild(idDiv);
+
+                    if (qr.makineye_atandi !== undefined) {
+                        const statusDiv = document.createElement('div');
+                        statusDiv.className = `qr-status ${qr.makineye_atandi ? 'assigned' : 'available'}`;
+                        statusDiv.textContent = qr.makineye_atandi ? '✓ Atandı' : '○ Boş';
+                        div.appendChild(statusDiv);
+                    }
+
+                    container.appendChild(div);
+                } catch (err) {
+                    console.error(`QR ${i+1} render hatası:`, err);
+                }
+            }
+
+            console.log('renderQRGrid tamamlandı, container child sayısı:', container.children.length);
         }
 
         function toggleSelect(id, type) {
