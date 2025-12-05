@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Makine Bilgisi - Glohe</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .header .icon { font-size: 48px; margin-bottom: 12px; }
+        .header h1 { font-size: 22px; color: #333; }
+
+        .header .id {
+            font-family: monospace;
+            font-size: 11px;
+            color: #888;
+            margin-top: 8px;
+            background: #f5f5f5;
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .status {
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .status.new { background: #fff3cd; color: #856404; }
+        .status.registered { background: #d4edda; color: #155724; }
+
+        /* Form styles */
+        .form-section {
+            margin-bottom: 24px;
+        }
+
+        .form-section h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 3px rgba(26,115,232,0.1);
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        /* Status select styling */
+        .status-select {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .status-option {
+            padding: 10px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .status-option:hover { border-color: #ccc; }
+        .status-option.selected { border-color: #1a73e8; background: #e3f2fd; }
+        .status-option.aktif.selected { background: #e8f5e9; border-color: #2e7d32; }
+        .status-option.bakim.selected { background: #fff3e0; border-color: #ef6c00; }
+        .status-option.arizali.selected { background: #ffebee; border-color: #c62828; }
+        .status-option.pasif.selected { background: #f5f5f5; border-color: #616161; }
+
+        /* Photo upload */
+        .photo-section {
+            margin-bottom: 24px;
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .photo-item {
+            aspect-ratio: 1;
+            border: 2px dashed #ddd;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+            background: #fafafa;
+            transition: border-color 0.2s;
+        }
+
+        .photo-item:hover { border-color: #1a73e8; }
+
+        .photo-item.has-photo {
+            border-style: solid;
+            border-color: #eee;
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-item .placeholder {
+            text-align: center;
+            color: #999;
+        }
+
+        .photo-item .placeholder svg {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 8px;
+        }
+
+        .photo-item .placeholder span {
+            font-size: 12px;
+        }
+
+        .photo-item .remove-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .photo-item .remove-btn:hover { background: #c62828; }
+
+        /* Buttons */
+        button {
+            padding: 14px 24px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            width: 100%;
+        }
+
+        button:hover { background: #1557b0; }
+        button:active { transform: scale(0.98); }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+
+        .btn-secondary {
+            background: #6c757d;
+            margin-top: 12px;
+        }
+
+        .btn-secondary:hover { background: #545b62; }
+
+        /* Success message */
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        /* View mode */
+        .info-box {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .info-row:last-child { border-bottom: none; }
+        .info-row .label { color: #666; font-size: 14px; }
+        .info-row .value { font-weight: 500; text-align: right; }
+
+        .photo-gallery {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .photo-gallery img {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* Back link */
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #1a73e8;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-size: 12px;
+        }
+
+        .footer a {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid #eee;
+            border-top-color: #1a73e8;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Lightbox */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lightbox.active { display: flex; }
+
+        .lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+        }
+
+        .lightbox .close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 32px;
+            cursor: pointer;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            body { padding: 12px; }
+            .card { padding: 16px; }
+            .form-row { grid-template-columns: 1fr; }
+            .status-select { grid-template-columns: repeat(2, 1fr); }
+            .photo-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <div class="icon">🔧</div>
+                <h1 id="pageTitle">Makine Bilgisi</h1>
+                <div class="id" id="machineId">-</div>
+            </div>
+
+            <div class="success-message" id="successMessage">
+                ✅ Makine bilgileri başarıyla kaydedildi!
+            </div>
+
+            <div id="loadingState" class="loading">
+                <div class="spinner"></div>
+                <span>Yükleniyor...</span>
+            </div>
+
+            <div id="statusBox" class="status new" style="display: none;">
+                ⚠️ Bu makine henüz tanımlanmamış
+            </div>
+
+            <!-- View Mode -->
+            <div id="viewMode" style="display: none;">
+                <div class="info-box">
+                    <div class="info-row">
+                        <span class="label">Makine Adı</span>
+                        <span class="value" id="viewAd">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Konum</span>
+                        <span class="value" id="viewKonum">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Kategori</span>
+                        <span class="value" id="viewKategori">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Durum</span>
+                        <span class="value" id="viewDurum">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Sorumlu</span>
+                        <span class="value" id="viewSorumlu">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Telefon</span>
+                        <span class="value" id="viewTelefon">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Marka / Model</span>
+                        <span class="value" id="viewMarkaModel">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Seri No</span>
+                        <span class="value" id="viewSeriNo">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Üretim Yılı</span>
+                        <span class="value" id="viewUretimYili">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Garanti Bitiş</span>
+                        <span class="value" id="viewGarantiBitis">-</span>
+                    </div>
+                </div>
+
+                <div id="viewNotlar" style="background: #fff3cd; padding: 12px; border-radius: 8px; margin-bottom: 16px; display: none;">
+                    <strong>Notlar:</strong>
+                    <p id="viewNotlarText" style="margin-top: 8px;"></p>
+                </div>
+
+                <div id="viewPhotos" class="photo-gallery" style="display: none;"></div>
+
+                <button onclick="showEditMode()">✏️ Düzenle</button>
+            </div>
+
+            <!-- Edit Mode -->
+            <div id="editMode" style="display: none;">
+                <form id="machineForm">
+                    <div class="form-section">
+                        <h3>Temel Bilgiler</h3>
+                        <div class="form-group">
+                            <label>Makine Adı *</label>
+                            <input type="text" id="ad" required placeholder="Örn: CNC Torna #1">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Konum</label>
+                                <input type="text" id="konum" placeholder="Örn: A Blok - Kat 2">
+                            </div>
+                            <div class="form-group">
+                                <label>Kategori</label>
+                                <select id="kategori">
+                                    <option value="">Seçin...</option>
+                                    <option value="CNC">CNC</option>
+                                    <option value="Torna">Torna</option>
+                                    <option value="Freze">Freze</option>
+                                    <option value="Pres">Pres</option>
+                                    <option value="Kaynak">Kaynak</option>
+                                    <option value="Kompresör">Kompresör</option>
+                                    <option value="Jeneratör">Jeneratör</option>
+                                    <option value="Konveyör">Konveyör</option>
+                                    <option value="Robot">Robot</option>
+                                    <option value="Diğer">Diğer</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Durum</h3>
+                        <div class="status-select" id="statusSelect">
+                            <div class="status-option aktif selected" data-value="aktif">✅ Aktif</div>
+                            <div class="status-option bakim" data-value="bakim">🔧 Bakımda</div>
+                            <div class="status-option arizali" data-value="arizali">⚠️ Arızalı</div>
+                            <div class="status-option pasif" data-value="pasif">⏸️ Pasif</div>
+                        </div>
+                        <input type="hidden" id="durum" value="aktif">
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Sorumlu Bilgileri</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Sorumlu Adı</label>
+                                <input type="text" id="sorumlu_adi" placeholder="Ad Soyad">
+                            </div>
+                            <div class="form-group">
+                                <label>Telefon</label>
+                                <input type="tel" id="sorumlu_telefon" placeholder="05XX XXX XX XX">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Teknik Bilgiler</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Marka</label>
+                                <input type="text" id="marka" placeholder="Örn: Siemens">
+                            </div>
+                            <div class="form-group">
+                                <label>Model</label>
+                                <input type="text" id="model" placeholder="Örn: X500">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Seri Numarası</label>
+                            <input type="text" id="seri_no" placeholder="Örn: SN-12345678">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Üretim Yılı</label>
+                                <input type="number" id="uretim_yili" placeholder="2020" min="1900" max="2100">
+                            </div>
+                            <div class="form-group">
+                                <label>Garanti Bitiş Tarihi</label>
+                                <input type="date" id="garanti_bitis">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section photo-section">
+                        <h3>Fotoğraflar (max 3 adet)</h3>
+                        <div class="photo-grid">
+                            <div class="photo-item" onclick="triggerUpload(0)">
+                                <div class="placeholder" id="placeholder0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <span>Ekle</span>
+                                </div>
+                                <img id="preview0" style="display: none;">
+                                <button type="button" class="remove-btn" id="remove0" style="display: none;" onclick="event.stopPropagation(); removePhoto(0)">×</button>
+                            </div>
+                            <div class="photo-item" onclick="triggerUpload(1)">
+                                <div class="placeholder" id="placeholder1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <span>Ekle</span>
+                                </div>
+                                <img id="preview1" style="display: none;">
+                                <button type="button" class="remove-btn" id="remove1" style="display: none;" onclick="event.stopPropagation(); removePhoto(1)">×</button>
+                            </div>
+                            <div class="photo-item" onclick="triggerUpload(2)">
+                                <div class="placeholder" id="placeholder2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <span>Ekle</span>
+                                </div>
+                                <img id="preview2" style="display: none;">
+                                <button type="button" class="remove-btn" id="remove2" style="display: none;" onclick="event.stopPropagation(); removePhoto(2)">×</button>
+                            </div>
+                        </div>
+                        <input type="file" id="photoInput" accept="image/*" style="display: none;" onchange="handlePhotoSelect(event)">
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Notlar</h3>
+                        <div class="form-group">
+                            <textarea id="notlar" placeholder="Bakım notları, özel durumlar vb."></textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submitBtn">💾 Kaydet</button>
+                    <button type="button" class="btn-secondary" onclick="showViewMode()" id="cancelBtn" style="display: none;">İptal</button>
+                </form>
+            </div>
+
+            <a href="/" class="back-link">← Ana Sayfaya Dön</a>
+        </div>
+
+        <div class="footer">
+            <p>Glohe Makine Takip | <a href="mailto:ugur.onar@glohe.com">ugur.onar@glohe.com</a></p>
+        </div>
+    </div>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+        <span class="close">&times;</span>
+        <img id="lightboxImg" src="">
+    </div>
+
+    <script>
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const machineId = urlParams.get('id');
+        let isNewMachine = true;
+        let machineData = null;
+        let photos = [null, null, null];
+        let currentPhotoIndex = 0;
+
+        document.getElementById('machineId').textContent = machineId || 'Geçersiz ID';
+
+        // Auth check
+        async function checkAuth() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = '/login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Load machine data
+        async function loadMachine() {
+            if (!machineId) {
+                alert('Geçersiz makine ID!');
+                return;
+            }
+
+            if (!await checkAuth()) return;
+
+            try {
+                const { data, error } = await supabase
+                    .from('makineler')
+                    .select('*')
+                    .eq('id', machineId)
+                    .single();
+
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('statusBox').style.display = 'block';
+
+                if (data) {
+                    isNewMachine = false;
+                    machineData = data;
+
+                    // Load photos
+                    if (data.fotograf_1) photos[0] = data.fotograf_1;
+                    if (data.fotograf_2) photos[1] = data.fotograf_2;
+                    if (data.fotograf_3) photos[2] = data.fotograf_3;
+
+                    showViewMode();
+                    populateViewMode(data);
+                    populateForm(data);
+
+                    document.getElementById('statusBox').className = 'status registered';
+                    document.getElementById('statusBox').innerHTML = '✅ Kayıtlı Makine';
+                    document.getElementById('pageTitle').textContent = data.ad || 'Makine Bilgisi';
+                } else {
+                    showEditMode();
+                }
+
+            } catch (error) {
+                console.error('Veri yüklenirken hata:', error);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('statusBox').style.display = 'block';
+                showEditMode();
+            }
+        }
+
+        function populateViewMode(data) {
+            document.getElementById('viewAd').textContent = data.ad || '-';
+            document.getElementById('viewKonum').textContent = data.konum || '-';
+            document.getElementById('viewKategori').textContent = data.kategori || '-';
+            document.getElementById('viewDurum').textContent = getStatusText(data.durum);
+            document.getElementById('viewSorumlu').textContent = data.sorumlu_adi || '-';
+            document.getElementById('viewTelefon').textContent = data.sorumlu_telefon || '-';
+            document.getElementById('viewMarkaModel').textContent =
+                (data.marka || data.model) ? `${data.marka || ''} ${data.model || ''}`.trim() : '-';
+            document.getElementById('viewSeriNo').textContent = data.seri_no || '-';
+            document.getElementById('viewUretimYili').textContent = data.uretim_yili || '-';
+            document.getElementById('viewGarantiBitis').textContent =
+                data.garanti_bitis ? new Date(data.garanti_bitis).toLocaleDateString('tr-TR') : '-';
+
+            if (data.notlar) {
+                document.getElementById('viewNotlar').style.display = 'block';
+                document.getElementById('viewNotlarText').textContent = data.notlar;
+            } else {
+                document.getElementById('viewNotlar').style.display = 'none';
+            }
+
+            // Photos
+            const photoGallery = document.getElementById('viewPhotos');
+            const photoList = [data.fotograf_1, data.fotograf_2, data.fotograf_3].filter(Boolean);
+
+            if (photoList.length > 0) {
+                photoGallery.style.display = 'grid';
+                photoGallery.innerHTML = photoList.map(p =>
+                    `<img src="${p}" onclick="openLightbox('${p}')">`
+                ).join('');
+            } else {
+                photoGallery.style.display = 'none';
+            }
+        }
+
+        function populateForm(data) {
+            document.getElementById('ad').value = data.ad || '';
+            document.getElementById('konum').value = data.konum || '';
+            document.getElementById('kategori').value = data.kategori || '';
+            document.getElementById('durum').value = data.durum || 'aktif';
+            document.getElementById('sorumlu_adi').value = data.sorumlu_adi || '';
+            document.getElementById('sorumlu_telefon').value = data.sorumlu_telefon || '';
+            document.getElementById('marka').value = data.marka || '';
+            document.getElementById('model').value = data.model || '';
+            document.getElementById('seri_no').value = data.seri_no || '';
+            document.getElementById('uretim_yili').value = data.uretim_yili || '';
+            document.getElementById('garanti_bitis').value = data.garanti_bitis || '';
+            document.getElementById('notlar').value = data.notlar || '';
+
+            // Update status select
+            updateStatusSelect(data.durum || 'aktif');
+
+            // Update photo previews
+            for (let i = 0; i < 3; i++) {
+                if (photos[i]) {
+                    showPhotoPreview(i, photos[i]);
+                }
+            }
+        }
+
+        function getStatusText(status) {
+            const texts = {
+                'aktif': '✅ Aktif',
+                'bakim': '🔧 Bakımda',
+                'arizali': '⚠️ Arızalı',
+                'pasif': '⏸️ Pasif'
+            };
+            return texts[status] || '✅ Aktif';
+        }
+
+        function showViewMode() {
+            document.getElementById('viewMode').style.display = 'block';
+            document.getElementById('editMode').style.display = 'none';
+        }
+
+        function showEditMode() {
+            document.getElementById('viewMode').style.display = 'none';
+            document.getElementById('editMode').style.display = 'block';
+            document.getElementById('cancelBtn').style.display = isNewMachine ? 'none' : 'block';
+            document.getElementById('submitBtn').textContent = isNewMachine ? '💾 Kaydet' : '💾 Güncelle';
+        }
+
+        // Status select handling
+        document.querySelectorAll('.status-option').forEach(option => {
+            option.addEventListener('click', () => {
+                updateStatusSelect(option.dataset.value);
+            });
+        });
+
+        function updateStatusSelect(value) {
+            document.querySelectorAll('.status-option').forEach(opt => opt.classList.remove('selected'));
+            document.querySelector(`.status-option[data-value="${value}"]`).classList.add('selected');
+            document.getElementById('durum').value = value;
+        }
+
+        // Photo handling
+        function triggerUpload(index) {
+            currentPhotoIndex = index;
+            document.getElementById('photoInput').click();
+        }
+
+        async function handlePhotoSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Optimize and convert to base64
+            const optimized = await optimizeImage(file);
+            photos[currentPhotoIndex] = optimized;
+            showPhotoPreview(currentPhotoIndex, optimized);
+
+            event.target.value = '';
+        }
+
+        async function optimizeImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+
+                        // Max dimensions
+                        const MAX_SIZE = 800;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_SIZE) {
+                                height *= MAX_SIZE / width;
+                                width = MAX_SIZE;
+                            }
+                        } else {
+                            if (height > MAX_SIZE) {
+                                width *= MAX_SIZE / height;
+                                height = MAX_SIZE;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Convert to JPEG with 70% quality
+                        const optimized = canvas.toDataURL('image/jpeg', 0.7);
+                        resolve(optimized);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function showPhotoPreview(index, src) {
+            const preview = document.getElementById(`preview${index}`);
+            const placeholder = document.getElementById(`placeholder${index}`);
+            const removeBtn = document.getElementById(`remove${index}`);
+            const item = preview.closest('.photo-item');
+
+            preview.src = src;
+            preview.style.display = 'block';
+            placeholder.style.display = 'none';
+            removeBtn.style.display = 'flex';
+            item.classList.add('has-photo');
+        }
+
+        function removePhoto(index) {
+            photos[index] = null;
+
+            const preview = document.getElementById(`preview${index}`);
+            const placeholder = document.getElementById(`placeholder${index}`);
+            const removeBtn = document.getElementById(`remove${index}`);
+            const item = preview.closest('.photo-item');
+
+            preview.style.display = 'none';
+            placeholder.style.display = 'block';
+            removeBtn.style.display = 'none';
+            item.classList.remove('has-photo');
+        }
+
+        // Lightbox
+        function openLightbox(src) {
+            document.getElementById('lightboxImg').src = src;
+            document.getElementById('lightbox').classList.add('active');
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+        }
+
+        // Form submission
+        document.getElementById('machineForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = 'Kaydediliyor...';
+
+            const data = {
+                id: machineId,
+                ad: document.getElementById('ad').value,
+                konum: document.getElementById('konum').value,
+                kategori: document.getElementById('kategori').value,
+                durum: document.getElementById('durum').value,
+                sorumlu_adi: document.getElementById('sorumlu_adi').value,
+                sorumlu_telefon: document.getElementById('sorumlu_telefon').value,
+                marka: document.getElementById('marka').value,
+                model: document.getElementById('model').value,
+                seri_no: document.getElementById('seri_no').value,
+                uretim_yili: document.getElementById('uretim_yili').value ? parseInt(document.getElementById('uretim_yili').value) : null,
+                garanti_bitis: document.getElementById('garanti_bitis').value || null,
+                notlar: document.getElementById('notlar').value,
+                fotograf_1: photos[0],
+                fotograf_2: photos[1],
+                fotograf_3: photos[2],
+                guncelleme_tarihi: new Date().toISOString()
+            };
+
+            try {
+                const { error } = await supabase
+                    .from('makineler')
+                    .upsert(data);
+
+                if (error) throw error;
+
+                document.getElementById('successMessage').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('successMessage').style.display = 'none';
+                }, 3000);
+
+                machineData = data;
+                isNewMachine = false;
+                populateViewMode(data);
+                showViewMode();
+
+                document.getElementById('statusBox').className = 'status registered';
+                document.getElementById('statusBox').innerHTML = '✅ Kayıtlı Makine';
+                document.getElementById('pageTitle').textContent = data.ad;
+
+            } catch (error) {
+                console.error('Kayıt hatası:', error);
+                alert('Kayıt sırasında bir hata oluştu!');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '💾 Güncelle';
+            }
+        });
+
+        // Initialize
+        loadMachine();
+    </script>
+</body>
+</html>

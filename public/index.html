@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glohe Makine Takip Sistemi</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="config.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+            color: white;
+            padding: 16px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1 { font-size: 20px; font-weight: 600; }
+
+        .header-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-info { font-size: 13px; opacity: 0.9; }
+
+        .btn-logout {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .btn-logout:hover { background: rgba(255,255,255,0.3); }
+
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            background: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .tab.active { background: #1a73e8; color: white; }
+        .tab:hover:not(.active) { background: #e8e8e8; }
+
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            margin-bottom: 16px;
+            color: #333;
+            font-size: 18px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        label { font-weight: 500; font-size: 14px; }
+
+        input, select {
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #1a73e8;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        button:hover { background: #1557b0; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* QR Grid */
+        .qr-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .qr-item {
+            background: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            position: relative;
+        }
+
+        .qr-item canvas { width: 100px; height: 100px; }
+        .qr-item .id {
+            font-family: monospace;
+            font-size: 9px;
+            color: #666;
+            margin-top: 6px;
+            word-break: break-all;
+        }
+
+        .qr-item .qr-status {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-top: 4px;
+            display: inline-block;
+        }
+
+        .qr-status.available { background: #e8f5e9; color: #2e7d32; }
+        .qr-status.assigned { background: #e3f2fd; color: #1565c0; }
+
+        .qr-item .select-check {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        /* Filters */
+        .filters {
+            display: grid;
+            grid-template-columns: 2fr repeat(3, 1fr) auto;
+            gap: 12px;
+            margin-bottom: 16px;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .filter-group label { font-size: 12px; color: #666; }
+        .filter-group input, .filter-group select { width: 100%; }
+
+        .filter-buttons { display: flex; gap: 8px; }
+        .btn-clear { background: #6c757d; }
+        .btn-export { background: #28a745; }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+            margin: 0 -20px;
+            padding: 0 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            min-width: 900px;
+        }
+
+        thead { background: #f8f9fa; }
+
+        th {
+            text-align: left;
+            padding: 12px 16px;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #dee2e6;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        th:hover { background: #e9ecef; }
+        th .sort-icon { margin-left: 4px; opacity: 0.3; }
+        th.sorted .sort-icon { opacity: 1; }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:hover { background: #f8f9fa; }
+
+        .machine-name { font-weight: 500; color: #1a73e8; cursor: pointer; }
+        .machine-name:hover { text-decoration: underline; }
+        .machine-id { font-family: monospace; font-size: 10px; color: #888; }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-cnc { background: #e3f2fd; color: #1565c0; }
+        .badge-torna { background: #f3e5f5; color: #7b1fa2; }
+        .badge-freze { background: #e8f5e9; color: #2e7d32; }
+        .badge-pres { background: #fff3e0; color: #ef6c00; }
+        .badge-kaynak { background: #ffebee; color: #c62828; }
+        .badge-kompresor { background: #e0f7fa; color: #00838f; }
+        .badge-jenerator { background: #fce4ec; color: #ad1457; }
+        .badge-konveyor { background: #f1f8e9; color: #558b2f; }
+        .badge-robot { background: #ede7f6; color: #4527a0; }
+        .badge-default { background: #f5f5f5; color: #616161; }
+
+        .status-aktif { background: #e8f5e9; color: #2e7d32; }
+        .status-bakim { background: #fff3e0; color: #ef6c00; }
+        .status-arizali { background: #ffebee; color: #c62828; }
+        .status-pasif { background: #f5f5f5; color: #616161; }
+
+        .actions { display: flex; gap: 6px; }
+        .btn-small { padding: 6px 12px; font-size: 12px; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: #666; }
+        .result-count { color: #666; font-size: 13px; margin-bottom: 12px; }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid #eee;
+            border-top-color: #1a73e8;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 12px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-size: 12px;
+        }
+
+        .footer a { color: #1a73e8; text-decoration: none; }
+
+        /* Tanex 24'lü Etiket Yazdırma Stili - A4 */
+        .print-area { display: none; }
+
+        @media print {
+            @page {
+                size: A4;
+                margin: 0;
+            }
+
+            body * { visibility: hidden; }
+            .print-area, .print-area * { visibility: visible; }
+
+            .print-area {
+                display: block;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 210mm;
+                height: 297mm;
+            }
+
+            .label-sheet {
+                width: 210mm;
+                height: 297mm;
+                padding: 8.8mm 4.7mm;
+                display: grid;
+                grid-template-columns: repeat(3, 66.7mm);
+                grid-template-rows: repeat(8, 33.8mm);
+                gap: 0;
+                page-break-after: always;
+            }
+
+            .label-cell {
+                width: 66.7mm;
+                height: 33.8mm;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 2mm;
+                box-sizing: border-box;
+            }
+
+            .label-cell canvas {
+                width: 20mm !important;
+                height: 20mm !important;
+            }
+
+            .label-cell .label-id {
+                font-size: 7pt;
+                font-family: monospace;
+                margin-top: 1mm;
+                text-align: center;
+                word-break: break-all;
+                max-width: 60mm;
+            }
+
+            .label-cell .label-company {
+                font-size: 6pt;
+                color: #666;
+                margin-top: 0.5mm;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .filters { grid-template-columns: 1fr 1fr; }
+            .header-stats { display: none; }
+        }
+
+        @media (max-width: 768px) {
+            .header-content { flex-direction: column; align-items: flex-start; }
+            .filters { grid-template-columns: 1fr; }
+            .tabs { width: 100%; }
+            .tab { flex: 1; text-align: center; }
+        }
+
+        @media (max-width: 480px) {
+            .container { padding: 12px; }
+            .qr-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        /* Sekme içi alt-sekmeler */
+        .sub-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 12px;
+        }
+
+        .sub-tab {
+            padding: 8px 16px;
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 14px;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -13px;
+        }
+
+        .sub-tab.active {
+            color: #1a73e8;
+            border-bottom-color: #1a73e8;
+        }
+
+        .sub-panel { display: none; }
+        .sub-panel.active { display: block; }
+
+        /* Selection toolbar */
+        .selection-toolbar {
+            background: #1a73e8;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .selection-toolbar.active { display: flex; }
+        .selection-toolbar button {
+            background: white;
+            color: #1a73e8;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1>🏭 Glohe Makine Takip</h1>
+                <div class="header-stats">
+                    <span id="totalCount">0 makine</span>
+                    <span id="categoryCount">0 kategori</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <span class="user-info" id="userEmail"></span>
+                <button class="btn-logout" onclick="logout()">Çıkış</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="showPanel('qr')">QR Kodlar</button>
+            <button class="tab" onclick="showPanel('list')">Makine Listesi</button>
+        </div>
+
+        <!-- QR Kod Paneli -->
+        <div id="qr" class="panel active">
+            <div class="sub-tabs">
+                <button class="sub-tab active" onclick="showSubPanel('generate')">Yeni Üret</button>
+                <button class="sub-tab" onclick="showSubPanel('archive')">QR Arşivi</button>
+            </div>
+
+            <!-- Yeni QR Üret -->
+            <div id="generate" class="sub-panel active">
+                <div class="card">
+                    <h2>📱 Yeni QR Kodlar Üret</h2>
+                    <div class="form-row">
+                        <label>Adet (Tanex 24'lü sayfa için 24'ün katları önerilir):</label>
+                        <input type="number" id="qrCount" value="24" min="1" max="240" style="width: 80px;">
+                        <button onclick="generateQRCodes()">Üret</button>
+                    </div>
+                    <p style="color: #666; font-size: 13px; margin-top: 8px;">
+                        Üretilen QR kodlar arşive kaydedilir. İstediğiniz zaman tekrar yazdırabilirsiniz.
+                    </p>
+                </div>
+
+                <div class="card" id="newQrCard" style="display: none;">
+                    <h2>Yeni Üretilen QR Kodlar</h2>
+                    <div class="selection-toolbar" id="selectionToolbar">
+                        <span><strong id="selectedCount">0</strong> adet seçili</span>
+                        <div>
+                            <button onclick="printSelected()">🖨️ Seçilenleri Yazdır (Tanex 24'lü)</button>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <button onclick="selectAll()">Tümünü Seç</button>
+                        <button onclick="deselectAll()" style="background: #6c757d;">Seçimi Kaldır</button>
+                        <button onclick="printSelected()" style="background: #28a745;">🖨️ Seçilenleri Yazdır</button>
+                    </div>
+                    <div id="qrGrid" class="qr-grid"></div>
+                </div>
+            </div>
+
+            <!-- QR Arşivi -->
+            <div id="archive" class="sub-panel">
+                <div class="card">
+                    <h2>📦 QR Kod Arşivi</h2>
+                    <p style="color: #666; margin-bottom: 16px;">
+                        Daha önce üretilen tüm QR kodlar. Kaybolan etiketleri tekrar yazdırabilirsiniz.
+                    </p>
+
+                    <div class="form-row" style="margin-bottom: 16px;">
+                        <select id="archiveFilter" onchange="loadArchive()">
+                            <option value="all">Tüm QR Kodlar</option>
+                            <option value="available">Atanmamış (Boş)</option>
+                            <option value="assigned">Makineye Atanmış</option>
+                        </select>
+                        <input type="text" id="archiveSearch" placeholder="ID ile ara..." oninput="loadArchive()" style="width: 200px;">
+                    </div>
+
+                    <div class="selection-toolbar" id="archiveSelectionToolbar">
+                        <span><strong id="archiveSelectedCount">0</strong> adet seçili</span>
+                        <button onclick="printArchiveSelected()">🖨️ Seçilenleri Yazdır</button>
+                    </div>
+
+                    <div id="archiveGrid" class="qr-grid">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <span>Yükleniyor...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Makine Listesi Paneli -->
+        <div id="list" class="panel">
+            <div class="card">
+                <h2>📋 Kayıtlı Makineler</h2>
+
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>Ara</label>
+                        <input type="text" id="filterSearch" placeholder="Ad, marka, model, seri no..." oninput="applyFilters()">
+                    </div>
+                    <div class="filter-group">
+                        <label>Kategori</label>
+                        <select id="filterCategory" onchange="applyFilters()">
+                            <option value="">Tümü</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Konum</label>
+                        <select id="filterLocation" onchange="applyFilters()">
+                            <option value="">Tümü</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Durum</label>
+                        <select id="filterStatus" onchange="applyFilters()">
+                            <option value="">Tümü</option>
+                            <option value="aktif">Aktif</option>
+                            <option value="bakim">Bakımda</option>
+                            <option value="arizali">Arızalı</option>
+                            <option value="pasif">Pasif</option>
+                        </select>
+                    </div>
+                    <div class="filter-buttons">
+                        <button class="btn-clear" onclick="clearFilters()">Temizle</button>
+                        <button class="btn-export" onclick="exportToCSV()">Excel</button>
+                    </div>
+                </div>
+
+                <div class="result-count" id="resultCount"></div>
+
+                <div class="table-container">
+                    <table id="machineTable">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable('ad')">Makine Adı <span class="sort-icon">↕</span></th>
+                                <th onclick="sortTable('konum')">Konum <span class="sort-icon">↕</span></th>
+                                <th onclick="sortTable('kategori')">Kategori <span class="sort-icon">↕</span></th>
+                                <th onclick="sortTable('durum')">Durum <span class="sort-icon">↕</span></th>
+                                <th onclick="sortTable('sorumlu_adi')">Sorumlu <span class="sort-icon">↕</span></th>
+                                <th onclick="sortTable('marka')">Marka/Model <span class="sort-icon">↕</span></th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody id="machineTableBody"></tbody>
+                    </table>
+                </div>
+
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <p>Henüz kayıtlı makine yok.</p>
+                </div>
+
+                <div id="loadingState" class="loading">
+                    <div class="spinner"></div>
+                    <span>Yükleniyor...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Glohe Makine Takip Sistemi | Destek: <a href="mailto:ugur.onar@glohe.com">ugur.onar@glohe.com</a></p>
+    </div>
+
+    <!-- Tanex 24'lü A4 Yazdırma Alanı -->
+    <div class="print-area" id="printArea"></div>
+
+    <script>
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentUser = null;
+        let allMachines = [];
+        let filteredMachines = [];
+        let generatedQRs = [];
+        let archivedQRs = [];
+        let selectedQRs = new Set();
+        let archiveSelectedQRs = new Set();
+        let sortColumn = 'ad';
+        let sortDirection = 'asc';
+
+        // Auth
+        async function checkAuth() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = '/login.html';
+                return;
+            }
+            currentUser = session.user;
+            document.getElementById('userEmail').textContent = currentUser.email;
+        }
+
+        async function logout() {
+            await supabase.auth.signOut();
+            window.location.href = '/login.html';
+        }
+
+        // Panel switching
+        function showPanel(name) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(name).classList.add('active');
+            event.target.classList.add('active');
+
+            if (name === 'list') loadMachines();
+        }
+
+        function showSubPanel(name) {
+            document.querySelectorAll('.sub-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(name).classList.add('active');
+            event.target.classList.add('active');
+
+            if (name === 'archive') loadArchive();
+        }
+
+        // QR Code Generation
+        async function generateQRCodes() {
+            const count = parseInt(document.getElementById('qrCount').value) || 24;
+            generatedQRs = [];
+            selectedQRs.clear();
+
+            const grid = document.getElementById('qrGrid');
+            const card = document.getElementById('newQrCard');
+            card.style.display = 'block';
+            grid.innerHTML = '<div class="loading"><div class="spinner"></div><span>QR kodlar üretiliyor...</span></div>';
+
+            // Generate IDs
+            const qrData = [];
+            for (let i = 0; i < count; i++) {
+                const id = 'MKN-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+                const url = `${SITE_URL}/makine.html?id=${id}`;
+                qrData.push({ id, url, olusturma_tarihi: new Date().toISOString() });
+                generatedQRs.push({ id, url });
+
+                // Small delay to ensure unique timestamps
+                await new Promise(r => setTimeout(r, 2));
+            }
+
+            // Save to Supabase
+            try {
+                const { error } = await supabase.from('qr_kodlar').insert(
+                    qrData.map(q => ({ id: q.id, olusturma_tarihi: q.olusturma_tarihi }))
+                );
+                if (error) console.error('QR kayıt hatası:', error);
+            } catch (e) {
+                console.error('QR kayıt hatası:', e);
+            }
+
+            // Render
+            await renderQRGrid(grid, generatedQRs, 'new');
+            updateSelectionToolbar();
+        }
+
+        async function renderQRGrid(container, qrs, type) {
+            container.innerHTML = '';
+
+            for (const qr of qrs) {
+                const div = document.createElement('div');
+                div.className = 'qr-item';
+                div.dataset.id = qr.id;
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'select-check';
+                checkbox.checked = type === 'new' ? selectedQRs.has(qr.id) : archiveSelectedQRs.has(qr.id);
+                checkbox.onchange = () => toggleSelect(qr.id, type);
+
+                const canvas = document.createElement('canvas');
+                await QRCode.toCanvas(canvas, qr.url || `${SITE_URL}/makine.html?id=${qr.id}`, {
+                    width: 100,
+                    margin: 1
+                });
+
+                const idDiv = document.createElement('div');
+                idDiv.className = 'id';
+                idDiv.textContent = qr.id;
+
+                div.appendChild(checkbox);
+                div.appendChild(canvas);
+                div.appendChild(idDiv);
+
+                if (qr.makineye_atandi !== undefined) {
+                    const statusDiv = document.createElement('div');
+                    statusDiv.className = `qr-status ${qr.makineye_atandi ? 'assigned' : 'available'}`;
+                    statusDiv.textContent = qr.makineye_atandi ? 'Atandı' : 'Boş';
+                    div.appendChild(statusDiv);
+                }
+
+                container.appendChild(div);
+            }
+        }
+
+        function toggleSelect(id, type) {
+            const set = type === 'new' ? selectedQRs : archiveSelectedQRs;
+            if (set.has(id)) {
+                set.delete(id);
+            } else {
+                set.add(id);
+            }
+            updateSelectionToolbar(type);
+        }
+
+        function selectAll() {
+            generatedQRs.forEach(qr => selectedQRs.add(qr.id));
+            document.querySelectorAll('#qrGrid .select-check').forEach(cb => cb.checked = true);
+            updateSelectionToolbar('new');
+        }
+
+        function deselectAll() {
+            selectedQRs.clear();
+            document.querySelectorAll('#qrGrid .select-check').forEach(cb => cb.checked = false);
+            updateSelectionToolbar('new');
+        }
+
+        function updateSelectionToolbar(type = 'new') {
+            if (type === 'new') {
+                const toolbar = document.getElementById('selectionToolbar');
+                const count = document.getElementById('selectedCount');
+                count.textContent = selectedQRs.size;
+                toolbar.classList.toggle('active', selectedQRs.size > 0);
+            } else {
+                const toolbar = document.getElementById('archiveSelectionToolbar');
+                const count = document.getElementById('archiveSelectedCount');
+                count.textContent = archiveSelectedQRs.size;
+                toolbar.classList.toggle('active', archiveSelectedQRs.size > 0);
+            }
+        }
+
+        // Archive
+        async function loadArchive() {
+            const filter = document.getElementById('archiveFilter').value;
+            const search = document.getElementById('archiveSearch').value.toLowerCase();
+            const grid = document.getElementById('archiveGrid');
+
+            grid.innerHTML = '<div class="loading"><div class="spinner"></div><span>Yükleniyor...</span></div>';
+
+            try {
+                let query = supabase.from('qr_kodlar').select('*').order('olusturma_tarihi', { ascending: false });
+
+                if (filter === 'available') {
+                    query = query.eq('makineye_atandi', false);
+                } else if (filter === 'assigned') {
+                    query = query.eq('makineye_atandi', true);
+                }
+
+                const { data, error } = await query;
+                if (error) throw error;
+
+                archivedQRs = data || [];
+
+                // Apply search filter
+                if (search) {
+                    archivedQRs = archivedQRs.filter(qr => qr.id.toLowerCase().includes(search));
+                }
+
+                if (archivedQRs.length === 0) {
+                    grid.innerHTML = '<div class="empty-state"><p>QR kod bulunamadı.</p></div>';
+                    return;
+                }
+
+                await renderQRGrid(grid, archivedQRs, 'archive');
+
+            } catch (error) {
+                console.error('Arşiv yüklenirken hata:', error);
+                grid.innerHTML = '<div class="empty-state"><p>Arşiv yüklenirken hata oluştu.</p></div>';
+            }
+        }
+
+        // Print - Tanex 24'lü A4 Format
+        async function printSelected() {
+            if (selectedQRs.size === 0) {
+                alert('Lütfen yazdırmak istediğiniz QR kodları seçin!');
+                return;
+            }
+
+            const selectedList = generatedQRs.filter(qr => selectedQRs.has(qr.id));
+            await generatePrintLayout(selectedList);
+        }
+
+        async function printArchiveSelected() {
+            if (archiveSelectedQRs.size === 0) {
+                alert('Lütfen yazdırmak istediğiniz QR kodları seçin!');
+                return;
+            }
+
+            const selectedList = archivedQRs.filter(qr => archiveSelectedQRs.has(qr.id));
+            await generatePrintLayout(selectedList);
+        }
+
+        async function generatePrintLayout(qrList) {
+            const printArea = document.getElementById('printArea');
+            printArea.innerHTML = '';
+
+            // Tanex 24'lü: 3 sütun x 8 satır = 24 etiket per sayfa
+            const labelsPerPage = 24;
+            const pages = Math.ceil(qrList.length / labelsPerPage);
+
+            for (let p = 0; p < pages; p++) {
+                const sheet = document.createElement('div');
+                sheet.className = 'label-sheet';
+
+                const startIdx = p * labelsPerPage;
+                const endIdx = Math.min(startIdx + labelsPerPage, qrList.length);
+
+                for (let i = startIdx; i < endIdx; i++) {
+                    const qr = qrList[i];
+                    const cell = document.createElement('div');
+                    cell.className = 'label-cell';
+
+                    const canvas = document.createElement('canvas');
+                    await QRCode.toCanvas(canvas, qr.url || `${SITE_URL}/makine.html?id=${qr.id}`, {
+                        width: 150,
+                        margin: 0
+                    });
+
+                    const idDiv = document.createElement('div');
+                    idDiv.className = 'label-id';
+                    idDiv.textContent = qr.id;
+
+                    const companyDiv = document.createElement('div');
+                    companyDiv.className = 'label-company';
+                    companyDiv.textContent = 'Glohe';
+
+                    cell.appendChild(canvas);
+                    cell.appendChild(idDiv);
+                    cell.appendChild(companyDiv);
+                    sheet.appendChild(cell);
+                }
+
+                // Boş hücreleri doldur (sayfa düzeni için)
+                for (let i = endIdx - startIdx; i < labelsPerPage; i++) {
+                    const emptyCell = document.createElement('div');
+                    emptyCell.className = 'label-cell';
+                    sheet.appendChild(emptyCell);
+                }
+
+                printArea.appendChild(sheet);
+            }
+
+            // Mark as printed
+            try {
+                const ids = qrList.map(q => q.id);
+                await supabase.from('qr_kodlar').update({ yazdirildi: true }).in('id', ids);
+            } catch (e) {
+                console.error('Yazdırma durumu güncellenemedi:', e);
+            }
+
+            window.print();
+        }
+
+        // Machine List Functions
+        async function loadMachines() {
+            const loadingEl = document.getElementById('loadingState');
+            const tableEl = document.getElementById('machineTable');
+            const emptyEl = document.getElementById('emptyState');
+
+            loadingEl.style.display = 'flex';
+            tableEl.style.display = 'none';
+            emptyEl.style.display = 'none';
+
+            try {
+                const { data, error } = await supabase
+                    .from('makineler')
+                    .select('*')
+                    .order('kayit_tarihi', { ascending: false });
+
+                if (error) throw error;
+
+                allMachines = data || [];
+
+                // Update QR assignment status
+                const machineIds = allMachines.map(m => m.id);
+                if (machineIds.length > 0) {
+                    await supabase.from('qr_kodlar')
+                        .update({ makineye_atandi: true })
+                        .in('id', machineIds);
+                }
+
+                updateStats();
+                populateFilters();
+                applyFilters();
+
+            } catch (error) {
+                console.error('Veri yüklenirken hata:', error);
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        }
+
+        function updateStats() {
+            const categories = new Set(allMachines.map(m => m.kategori).filter(Boolean));
+            document.getElementById('totalCount').textContent = `${allMachines.length} makine`;
+            document.getElementById('categoryCount').textContent = `${categories.size} kategori`;
+        }
+
+        function populateFilters() {
+            const categories = [...new Set(allMachines.map(m => m.kategori).filter(Boolean))].sort();
+            const locations = [...new Set(allMachines.map(m => m.konum).filter(Boolean))].sort();
+
+            document.getElementById('filterCategory').innerHTML = '<option value="">Tümü</option>' +
+                categories.map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('filterLocation').innerHTML = '<option value="">Tümü</option>' +
+                locations.map(l => `<option value="${l}">${l}</option>`).join('');
+        }
+
+        function applyFilters() {
+            const search = document.getElementById('filterSearch').value.toLowerCase();
+            const category = document.getElementById('filterCategory').value;
+            const location = document.getElementById('filterLocation').value;
+            const status = document.getElementById('filterStatus').value;
+
+            filteredMachines = allMachines.filter(m => {
+                const matchSearch = !search ||
+                    (m.ad || '').toLowerCase().includes(search) ||
+                    (m.marka || '').toLowerCase().includes(search) ||
+                    (m.model || '').toLowerCase().includes(search) ||
+                    (m.seri_no || '').toLowerCase().includes(search) ||
+                    (m.id || '').toLowerCase().includes(search);
+
+                return matchSearch &&
+                    (!category || m.kategori === category) &&
+                    (!location || m.konum === location) &&
+                    (!status || m.durum === status);
+            });
+
+            sortMachines();
+            renderTable();
+        }
+
+        function clearFilters() {
+            document.getElementById('filterSearch').value = '';
+            document.getElementById('filterCategory').value = '';
+            document.getElementById('filterLocation').value = '';
+            document.getElementById('filterStatus').value = '';
+            applyFilters();
+        }
+
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'asc';
+            }
+            sortMachines();
+            renderTable();
+        }
+
+        function sortMachines() {
+            filteredMachines.sort((a, b) => {
+                let valA = (a[sortColumn] || '').toString().toLowerCase();
+                let valB = (b[sortColumn] || '').toString().toLowerCase();
+                if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+                if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+
+        function getCategoryClass(cat) {
+            const map = { 'CNC': 'badge-cnc', 'Torna': 'badge-torna', 'Freze': 'badge-freze', 'Pres': 'badge-pres', 'Kaynak': 'badge-kaynak', 'Kompresör': 'badge-kompresor', 'Jeneratör': 'badge-jenerator', 'Konveyör': 'badge-konveyor', 'Robot': 'badge-robot' };
+            return map[cat] || 'badge-default';
+        }
+
+        function getStatusText(s) {
+            return { 'aktif': 'Aktif', 'bakim': 'Bakımda', 'arizali': 'Arızalı', 'pasif': 'Pasif' }[s] || 'Aktif';
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('machineTableBody');
+            const table = document.getElementById('machineTable');
+            const empty = document.getElementById('emptyState');
+            const count = document.getElementById('resultCount');
+
+            if (filteredMachines.length === 0) {
+                table.style.display = 'none';
+                empty.style.display = 'block';
+                count.textContent = allMachines.length ? 'Sonuç bulunamadı' : '';
+                return;
+            }
+
+            table.style.display = 'table';
+            empty.style.display = 'none';
+            count.textContent = `${filteredMachines.length} / ${allMachines.length} makine`;
+
+            tbody.innerHTML = filteredMachines.map(m => `
+                <tr>
+                    <td>
+                        <span class="machine-name" onclick="openMachine('${m.id}')">${m.ad || 'İsimsiz'}</span>
+                        <div class="machine-id">${m.id}</div>
+                    </td>
+                    <td>${m.konum || '-'}</td>
+                    <td>${m.kategori ? `<span class="badge ${getCategoryClass(m.kategori)}">${m.kategori}</span>` : '-'}</td>
+                    <td><span class="badge status-${m.durum || 'aktif'}">${getStatusText(m.durum)}</span></td>
+                    <td>${m.sorumlu_adi || '-'}</td>
+                    <td>${m.marka || ''} ${m.model || ''}</td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn-small" onclick="openMachine('${m.id}')">Düzenle</button>
+                            <button class="btn-small" onclick="printSingleQR('${m.id}')" style="background:#28a745">QR</button>
+                            <button class="btn-small btn-danger" onclick="deleteMachine('${m.id}')">Sil</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openMachine(id) {
+            window.open(`/makine.html?id=${id}`, '_blank');
+        }
+
+        async function printSingleQR(id) {
+            await generatePrintLayout([{ id, url: `${SITE_URL}/makine.html?id=${id}` }]);
+        }
+
+        async function deleteMachine(id) {
+            if (!confirm('Bu makineyi silmek istediğinize emin misiniz?')) return;
+            try {
+                await supabase.from('makineler').delete().eq('id', id);
+                await supabase.from('qr_kodlar').update({ makineye_atandi: false }).eq('id', id);
+                loadMachines();
+            } catch (e) {
+                alert('Silme hatası!');
+            }
+        }
+
+        function exportToCSV() {
+            if (filteredMachines.length === 0) return alert('Veri yok!');
+
+            const headers = ['ID', 'Ad', 'Konum', 'Kategori', 'Durum', 'Sorumlu', 'Telefon', 'Marka', 'Model', 'Seri No'];
+            const rows = filteredMachines.map(m => [
+                m.id, m.ad || '', m.konum || '', m.kategori || '', m.durum || '',
+                m.sorumlu_adi || '', m.sorumlu_telefon || '', m.marka || '', m.model || '', m.seri_no || ''
+            ]);
+
+            let csv = '\uFEFF' + headers.join(';') + '\n';
+            csv += rows.map(r => r.map(c => `"${c}"`).join(';')).join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `makineler_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        // Init
+        checkAuth();
+    </script>
+</body>
+</html>
