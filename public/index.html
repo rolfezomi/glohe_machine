@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Glohe Makine Takip Sistemi</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
     <script src="config.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1368,6 +1368,21 @@
             }
         }
 
+        // QR kod oluşturma yardımcı fonksiyonu
+        function createQRCodeImage(text, size) {
+            const qr = qrcode(0, 'M');
+            qr.addData(text);
+            qr.make();
+
+            // SVG olarak oluştur ve img olarak döndür
+            const cellSize = Math.floor(size / qr.getModuleCount());
+            const img = document.createElement('img');
+            img.src = 'data:image/svg+xml;base64,' + btoa(qr.createSvgTag(cellSize, 0));
+            img.style.width = size + 'px';
+            img.style.height = size + 'px';
+            return img;
+        }
+
         async function renderQRGrid(container, qrs, type) {
             container.innerHTML = '';
 
@@ -1379,38 +1394,34 @@
             console.log('renderQRGrid başladı, QR sayısı:', qrs.length);
 
             for (let i = 0; i < qrs.length; i++) {
-                const qr = qrs[i];
+                const qrData = qrs[i];
                 try {
                     const div = document.createElement('div');
                     div.className = 'qr-item';
-                    div.dataset.id = qr.id;
+                    div.dataset.id = qrData.id;
 
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
                     checkbox.className = 'select-check';
-                    checkbox.checked = type === 'new' ? selectedQRs.has(qr.id) : archiveSelectedQRs.has(qr.id);
-                    checkbox.onchange = () => toggleSelect(qr.id, type);
+                    checkbox.checked = type === 'new' ? selectedQRs.has(qrData.id) : archiveSelectedQRs.has(qrData.id);
+                    checkbox.onchange = () => toggleSelect(qrData.id, type);
 
-                    const canvas = document.createElement('canvas');
-                    const qrUrl = qr.url || `${SITE_URL}/makine.html?id=${qr.id}`;
-
-                    await QRCode.toCanvas(canvas, qrUrl, {
-                        width: 110,
-                        margin: 1
-                    });
+                    const qrUrl = qrData.url || `${SITE_URL}/makine.html?id=${qrData.id}`;
+                    const qrImg = createQRCodeImage(qrUrl, 110);
+                    qrImg.style.borderRadius = '8px';
 
                     const idDiv = document.createElement('div');
                     idDiv.className = 'id';
-                    idDiv.textContent = qr.id;
+                    idDiv.textContent = qrData.id;
 
                     div.appendChild(checkbox);
-                    div.appendChild(canvas);
+                    div.appendChild(qrImg);
                     div.appendChild(idDiv);
 
-                    if (qr.makineye_atandi !== undefined) {
+                    if (qrData.makineye_atandi !== undefined) {
                         const statusDiv = document.createElement('div');
-                        statusDiv.className = `qr-status ${qr.makineye_atandi ? 'assigned' : 'available'}`;
-                        statusDiv.textContent = qr.makineye_atandi ? '✓ Atandı' : '○ Boş';
+                        statusDiv.className = `qr-status ${qrData.makineye_atandi ? 'assigned' : 'available'}`;
+                        statusDiv.textContent = qrData.makineye_atandi ? '✓ Atandı' : '○ Boş';
                         div.appendChild(statusDiv);
                     }
 
@@ -1549,25 +1560,22 @@
                 const endIdx = Math.min(startIdx + labelsPerPage, qrList.length);
 
                 for (let i = startIdx; i < endIdx; i++) {
-                    const qr = qrList[i];
+                    const qrData = qrList[i];
                     const label = document.createElement('div');
                     label.className = 'preview-label';
 
-                    const canvas = document.createElement('canvas');
-                    await QRCode.toCanvas(canvas, qr.url || `${SITE_URL}/makine.html?id=${qr.id}`, {
-                        width: 150,
-                        margin: 0
-                    });
+                    const qrUrl = qrData.url || `${SITE_URL}/makine.html?id=${qrData.id}`;
+                    const qrImg = createQRCodeImage(qrUrl, 75);
 
                     const idDiv = document.createElement('div');
                     idDiv.className = 'preview-label-id';
-                    idDiv.textContent = qr.id;
+                    idDiv.textContent = qrData.id;
 
                     const companyDiv = document.createElement('div');
                     companyDiv.className = 'preview-label-company';
                     companyDiv.textContent = 'Glohe';
 
-                    label.appendChild(canvas);
+                    label.appendChild(qrImg);
                     label.appendChild(idDiv);
                     label.appendChild(companyDiv);
                     page.appendChild(label);
@@ -1621,25 +1629,22 @@
                 const endIdx = Math.min(startIdx + labelsPerPage, qrList.length);
 
                 for (let i = startIdx; i < endIdx; i++) {
-                    const qr = qrList[i];
+                    const qrData = qrList[i];
                     const cell = document.createElement('div');
                     cell.className = 'label-cell';
 
-                    const canvas = document.createElement('canvas');
-                    await QRCode.toCanvas(canvas, qr.url || `${SITE_URL}/makine.html?id=${qr.id}`, {
-                        width: 150,
-                        margin: 0
-                    });
+                    const qrUrl = qrData.url || `${SITE_URL}/makine.html?id=${qrData.id}`;
+                    const qrImg = createQRCodeImage(qrUrl, 75);
 
                     const idDiv = document.createElement('div');
                     idDiv.className = 'label-id';
-                    idDiv.textContent = qr.id;
+                    idDiv.textContent = qrData.id;
 
                     const companyDiv = document.createElement('div');
                     companyDiv.className = 'label-company';
                     companyDiv.textContent = 'Glohe';
 
-                    cell.appendChild(canvas);
+                    cell.appendChild(qrImg);
                     cell.appendChild(idDiv);
                     cell.appendChild(companyDiv);
                     sheet.appendChild(cell);
