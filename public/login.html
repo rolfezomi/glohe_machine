@@ -389,13 +389,37 @@
     </div>
 
     <script>
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Supabase client - localStorage kullanarak oturum kalıcılığını sağla
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                persistSession: true,
+                storageKey: 'glohe-makine-auth',
+                storage: window.localStorage,
+                autoRefreshToken: true,
+                detectSessionInUrl: true
+            }
+        });
+
+        // Return URL'i al (QR koddan gelindiyse)
+        const urlParams = new URLSearchParams(window.location.search);
+        const returnUrl = urlParams.get('return');
+
+        // Yönlendirme fonksiyonu
+        function redirectAfterLogin() {
+            if (returnUrl) {
+                // QR koddan gelindiyse oraya geri dön
+                window.location.href = decodeURIComponent(returnUrl);
+            } else {
+                // Normal giriş, ana sayfaya git
+                window.location.href = '/';
+            }
+        }
 
         // Zaten giriş yapmışsa yönlendir
         async function checkAuth() {
             const { data: { session } } = await supabase.auth.getSession();
             if (session) {
-                window.location.href = '/';
+                redirectAfterLogin();
             }
         }
         checkAuth();
@@ -421,8 +445,8 @@
 
                 if (error) throw error;
 
-                // Başarılı giriş
-                window.location.href = '/';
+                // Başarılı giriş - return URL varsa oraya, yoksa ana sayfaya git
+                redirectAfterLogin();
 
             } catch (error) {
                 errorDiv.textContent = 'E-posta veya şifre hatalı!';

@@ -774,7 +774,16 @@
     </div>
 
     <script>
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Supabase client - localStorage kullanarak oturum kalıcılığını sağla
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                persistSession: true,
+                storageKey: 'glohe-makine-auth',
+                storage: window.localStorage,
+                autoRefreshToken: true,
+                detectSessionInUrl: true
+            }
+        });
 
         const urlParams = new URLSearchParams(window.location.search);
         const machineId = urlParams.get('id');
@@ -803,14 +812,31 @@
             document.getElementById('machineId').textContent = escapeHtml(machineId);
         }
 
-        // Auth check
+        // Auth check - geliştirilmiş oturum kontrolü
         async function checkAuth() {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
+            try {
+                // Önce mevcut oturumu kontrol et
+                const { data: { session }, error } = await supabase.auth.getSession();
+
+                if (error) {
+                    console.error('Oturum kontrolü hatası:', error);
+                }
+
+                if (session) {
+                    console.log('Oturum aktif:', session.user.email);
+                    return true;
+                }
+
+                // Oturum yoksa, URL'deki return parametresini kaydet ve login'e yönlendir
+                const currentUrl = window.location.href;
+                const returnUrl = encodeURIComponent(currentUrl);
+                window.location.href = `/login.html?return=${returnUrl}`;
+                return false;
+            } catch (err) {
+                console.error('Auth check hatası:', err);
                 window.location.href = '/login.html';
                 return false;
             }
-            return true;
         }
 
         // Load machine data
