@@ -755,6 +755,230 @@
             width: 16px;
             height: 16px;
         }
+
+        /* Print Preview Modal */
+        .preview-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .preview-modal.active {
+            display: flex;
+        }
+
+        .preview-container {
+            background: var(--white);
+            border-radius: 20px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.4);
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .preview-header {
+            padding: 24px 28px;
+            border-bottom: 2px solid var(--gray-100);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .preview-header h2 {
+            font-size: 20px;
+            color: var(--gray-800);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .preview-header .icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .preview-close {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: var(--gray-100);
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray-500);
+            transition: all 0.2s;
+        }
+
+        .preview-close:hover {
+            background: var(--danger-light);
+            color: var(--danger);
+            transform: rotate(90deg);
+        }
+
+        .preview-info {
+            padding: 16px 28px;
+            background: var(--primary-lighter);
+            border-bottom: 1px solid var(--gray-100);
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .preview-info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        .preview-info-item strong {
+            color: var(--primary-dark);
+        }
+
+        .preview-body {
+            flex: 1;
+            overflow: auto;
+            padding: 24px;
+            background: var(--gray-50);
+        }
+
+        .preview-page {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 8.8mm 4.7mm;
+            display: grid;
+            grid-template-columns: repeat(3, 66.7mm);
+            grid-template-rows: repeat(8, 33.8mm);
+            gap: 0;
+            transform-origin: top center;
+        }
+
+        .preview-label {
+            width: 66.7mm;
+            height: 33.8mm;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2mm;
+            box-sizing: border-box;
+            border: 1px dashed var(--gray-200);
+        }
+
+        .preview-label canvas {
+            width: 20mm !important;
+            height: 20mm !important;
+        }
+
+        .preview-label .preview-label-id {
+            font-size: 7pt;
+            font-family: 'SF Mono', Monaco, monospace;
+            margin-top: 1mm;
+            text-align: center;
+            word-break: break-all;
+            max-width: 60mm;
+            color: var(--gray-600);
+        }
+
+        .preview-label .preview-label-company {
+            font-size: 6pt;
+            color: var(--gray-400);
+            margin-top: 0.5mm;
+        }
+
+        .preview-label.empty {
+            background: var(--gray-50);
+            border: 1px dashed var(--gray-200);
+        }
+
+        .preview-footer {
+            padding: 20px 28px;
+            border-top: 2px solid var(--gray-100);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .preview-footer .page-info {
+            color: var(--gray-500);
+            font-size: 14px;
+        }
+
+        .preview-footer .btn-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .preview-footer button {
+            width: auto;
+            padding: 14px 28px;
+        }
+
+        .btn-cancel {
+            background: var(--gray-500);
+        }
+
+        .btn-cancel:hover {
+            background: var(--gray-600);
+            box-shadow: 0 8px 25px rgba(107, 114, 128, 0.35);
+        }
+
+        .btn-print {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        }
+
+        /* Scale preview for smaller screens */
+        @media (max-width: 900px) {
+            .preview-page {
+                transform: scale(0.6);
+                margin-bottom: -120mm;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .preview-page {
+                transform: scale(0.4);
+                margin-bottom: -180mm;
+            }
+            .preview-header, .preview-footer {
+                padding: 16px 20px;
+            }
+            .preview-info {
+                padding: 12px 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -940,6 +1164,39 @@
 
     <!-- Tanex 24'lü A4 Yazdırma Alanı -->
     <div class="print-area" id="printArea"></div>
+
+    <!-- Print Preview Modal -->
+    <div class="preview-modal" id="previewModal">
+        <div class="preview-container">
+            <div class="preview-header">
+                <h2><span class="icon">🖨️</span> Yazdırma Önizlemesi</h2>
+                <button class="preview-close" onclick="closePreview()">×</button>
+            </div>
+            <div class="preview-info">
+                <div class="preview-info-item">
+                    📱 Toplam: <strong id="previewTotalCount">0</strong> QR kod
+                </div>
+                <div class="preview-info-item">
+                    📄 Sayfa: <strong id="previewPageCount">0</strong> adet A4
+                </div>
+                <div class="preview-info-item">
+                    📐 Format: <strong>Tanex 24'lü</strong> (3×8)
+                </div>
+            </div>
+            <div class="preview-body" id="previewBody">
+                <!-- Preview pages will be rendered here -->
+            </div>
+            <div class="preview-footer">
+                <div class="page-info">
+                    💡 Yazdırırken "Gerçek Boyut" veya "Ölçekleme Yok" seçeneğini kullanın
+                </div>
+                <div class="btn-group">
+                    <button class="btn-cancel" onclick="closePreview()">İptal</button>
+                    <button class="btn-print" onclick="confirmPrint()">🖨️ Yazdır</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -1150,7 +1407,9 @@
             }
         }
 
-        // Print - Tanex 24'lü A4 Format
+        // Print Preview & Print - Tanex 24'lü A4 Format
+        let currentPrintList = [];
+
         async function printSelected() {
             if (selectedQRs.size === 0) {
                 alert('Lütfen yazdırmak istediğiniz QR kodları seçin!');
@@ -1158,7 +1417,7 @@
             }
 
             const selectedList = generatedQRs.filter(qr => selectedQRs.has(qr.id));
-            await generatePrintLayout(selectedList);
+            await showPrintPreview(selectedList);
         }
 
         async function printArchiveSelected() {
@@ -1168,7 +1427,90 @@
             }
 
             const selectedList = archivedQRs.filter(qr => archiveSelectedQRs.has(qr.id));
-            await generatePrintLayout(selectedList);
+            await showPrintPreview(selectedList);
+        }
+
+        // Show print preview modal
+        async function showPrintPreview(qrList) {
+            currentPrintList = qrList;
+            const modal = document.getElementById('previewModal');
+            const previewBody = document.getElementById('previewBody');
+
+            // Update info
+            const labelsPerPage = 24;
+            const pageCount = Math.ceil(qrList.length / labelsPerPage);
+            document.getElementById('previewTotalCount').textContent = qrList.length;
+            document.getElementById('previewPageCount').textContent = pageCount;
+
+            // Show modal with loading
+            modal.classList.add('active');
+            previewBody.innerHTML = '<div class="loading"><div class="spinner"></div><span>Önizleme oluşturuluyor...</span></div>';
+
+            // Generate preview pages
+            previewBody.innerHTML = '';
+
+            for (let p = 0; p < pageCount; p++) {
+                const page = document.createElement('div');
+                page.className = 'preview-page';
+
+                const startIdx = p * labelsPerPage;
+                const endIdx = Math.min(startIdx + labelsPerPage, qrList.length);
+
+                for (let i = startIdx; i < endIdx; i++) {
+                    const qr = qrList[i];
+                    const label = document.createElement('div');
+                    label.className = 'preview-label';
+
+                    const canvas = document.createElement('canvas');
+                    await QRCode.toCanvas(canvas, qr.url || `${SITE_URL}/makine.html?id=${qr.id}`, {
+                        width: 150,
+                        margin: 0
+                    });
+
+                    const idDiv = document.createElement('div');
+                    idDiv.className = 'preview-label-id';
+                    idDiv.textContent = qr.id;
+
+                    const companyDiv = document.createElement('div');
+                    companyDiv.className = 'preview-label-company';
+                    companyDiv.textContent = 'Glohe';
+
+                    label.appendChild(canvas);
+                    label.appendChild(idDiv);
+                    label.appendChild(companyDiv);
+                    page.appendChild(label);
+                }
+
+                // Add empty cells to complete the grid
+                for (let i = endIdx - startIdx; i < labelsPerPage; i++) {
+                    const emptyLabel = document.createElement('div');
+                    emptyLabel.className = 'preview-label empty';
+                    page.appendChild(emptyLabel);
+                }
+
+                // Add page number
+                const pageNumber = document.createElement('div');
+                pageNumber.style.cssText = 'grid-column: 1 / -1; text-align: center; padding: 8px; font-size: 12px; color: #9ca3af; position: absolute; bottom: 5mm; left: 0; right: 0;';
+                pageNumber.textContent = `Sayfa ${p + 1} / ${pageCount}`;
+
+                const pageWrapper = document.createElement('div');
+                pageWrapper.style.position = 'relative';
+                pageWrapper.appendChild(page);
+
+                previewBody.appendChild(pageWrapper);
+            }
+        }
+
+        function closePreview() {
+            document.getElementById('previewModal').classList.remove('active');
+            currentPrintList = [];
+        }
+
+        async function confirmPrint() {
+            if (currentPrintList.length === 0) return;
+
+            await generatePrintLayout(currentPrintList);
+            closePreview();
         }
 
         async function generatePrintLayout(qrList) {
@@ -1393,7 +1735,7 @@
         }
 
         async function printSingleQR(id) {
-            await generatePrintLayout([{ id, url: `${SITE_URL}/makine.html?id=${id}` }]);
+            await showPrintPreview([{ id, url: `${SITE_URL}/makine.html?id=${id}` }]);
         }
 
         async function deleteMachine(id) {
