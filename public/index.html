@@ -1829,33 +1829,31 @@
 
         // Boşta olan QR kodları seç
         function selectAllAvailable() {
-            // Önce boşta olanların sayısını hesapla
-            const availableCount = archivedQRs.filter(qr => !qr.makineye_atandi).length;
+            // Önce boşta olanların listesini al
+            const availableQRs = archivedQRs.filter(qr => !qr.makineye_atandi);
+            const availableCount = availableQRs.length;
 
             if (availableCount === 0) {
                 alert('Boşta (atanmamış) QR kod bulunamadı.');
                 return;
             }
 
-            // Kullanıcıya sor
-            if (!confirm(`${availableCount} adet boşta QR kod bulundu.\n\nTümünü seçmek istiyor musunuz?`)) {
+            // Kullanıcıdan kaç adet seçmek istediğini sor
+            const input = prompt(`Toplam ${availableCount} adet boşta QR kod var.\n\nKaç adet yazdırmak istiyorsunuz?`, availableCount);
+
+            if (input === null) return; // İptal edildi
+
+            const requestedCount = parseInt(input);
+            if (isNaN(requestedCount) || requestedCount <= 0) {
+                alert('Lütfen geçerli bir sayı girin.');
                 return;
             }
 
-            archiveSelectedQRs.clear();
-            archivedQRs.forEach(qr => {
-                if (!qr.makineye_atandi) {
-                    archiveSelectedQRs.add(qr.id);
-                }
-            });
-            document.querySelectorAll('#archiveGrid .qr-item').forEach(item => {
-                const qrData = archivedQRs.find(q => q.id === item.dataset.id);
-                const checkbox = item.querySelector('.select-check');
-                if (checkbox && qrData) {
-                    checkbox.checked = !qrData.makineye_atandi;
-                }
-            });
-            updateSelectionToolbar('archive');
+            const selectCount = Math.min(requestedCount, availableCount);
+            const selectedList = availableQRs.slice(0, selectCount);
+
+            // Direkt yazdırma önizlemesine geç
+            showPrintPreview(selectedList);
         }
 
         // Arşiv seçimini temizle
