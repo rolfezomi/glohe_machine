@@ -1839,7 +1839,7 @@
             }
 
             // Kullanıcıdan kaç adet seçmek istediğini sor
-            const input = prompt(`Toplam ${availableCount} adet boşta QR kod var.\n\nKaç adet yazdırmak istiyorsunuz?`, availableCount);
+            const input = prompt(`Toplam ${availableCount} adet boşta QR kod var.\n\nKaç adet yazdırmak istiyorsunuz?`, '24');
 
             if (input === null) return; // İptal edildi
 
@@ -1849,8 +1849,15 @@
                 return;
             }
 
-            const selectCount = Math.min(requestedCount, availableCount);
-            const selectedList = availableQRs.slice(0, selectCount);
+            if (requestedCount > availableCount) {
+                alert(`Maksimum ${availableCount} adet seçebilirsiniz.`);
+                return;
+            }
+
+            const selectedList = availableQRs.slice(0, requestedCount);
+
+            console.log('Seçilen QR sayısı:', selectedList.length);
+            console.log('Hesaplanan sayfa sayısı:', Math.ceil(selectedList.length / 24));
 
             // Direkt yazdırma önizlemesine geç
             showPrintPreview(selectedList);
