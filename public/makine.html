@@ -623,6 +623,10 @@
                         <span class="label">Makine Adı</span>
                         <span class="value" id="viewAd">-</span>
                     </div>
+                    <div class="info-row" id="viewMakineKoduRow" style="display: none;">
+                        <span class="label">Makine Kodu</span>
+                        <span class="value" id="viewMakineKodu">-</span>
+                    </div>
                     <div class="info-row">
                         <span class="label">Konum</span>
                         <span class="value" id="viewKonum">-</span>
@@ -677,19 +681,34 @@
                     <div class="form-section">
                         <h3>Temel Bilgiler</h3>
                         <div class="form-group">
-                            <label>Makine Adı *</label>
-                            <input type="text" id="ad" required placeholder="Örn: CNC Torna #1">
+                            <label>Makine Adı</label>
+                            <input type="text" id="ad" placeholder="Örn: CNC Torna #1">
+                        </div>
+
+                        <div class="form-group" id="makineKoduGroup" style="display: none;">
+                            <label>Makine Kodu</label>
+                            <input type="text" id="makine_kodu" placeholder="Örn: MK-001">
                         </div>
 
                         <div class="form-row">
-                            <div class="form-group">
+                            <div class="form-group" id="konumGroup">
                                 <label>Konum</label>
                                 <input type="text" id="konum" placeholder="Örn: A Blok - Kat 2">
+                                <select id="konumSelect" style="display: none;">
+                                    <option value="">Seçin...</option>
+                                    <option value="Primer-1">Primer-1</option>
+                                    <option value="Primer-2">Primer-2</option>
+                                    <option value="Primer-3">Primer-3</option>
+                                    <option value="Seconder-1">Seconder-1</option>
+                                    <option value="Seconder-2">Seconder-2</option>
+                                    <option value="Seconder-3">Seconder-3</option>
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label>Kategori</label>
-                                <select id="kategori">
+                                <select id="kategori" onchange="onKategoriChange()">
                                     <option value="">Seçin...</option>
+                                    <option value="Üretim">Üretim</option>
                                     <option value="Dolum Makinesi">Dolum Makinesi</option>
                                     <option value="Tank">Tank</option>
                                     <option value="Bilgisayar">Bilgisayar</option>
@@ -715,14 +734,14 @@
                         <input type="hidden" id="durum" value="aktif">
                     </div>
 
-                    <div class="form-section">
+                    <div class="form-section" id="sorumluSection">
                         <h3>Sorumlu Bilgileri</h3>
                         <div class="form-row">
                             <div class="form-group">
                                 <label>Sorumlu Adı</label>
                                 <input type="text" id="sorumlu_adi" placeholder="Ad Soyad">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group" id="telefonGroup">
                                 <label>Telefon</label>
                                 <input type="tel" id="sorumlu_telefon" placeholder="05XX XXX XX XX">
                             </div>
@@ -752,7 +771,7 @@
                                 <label>Üretim Yılı</label>
                                 <input type="number" id="uretim_yili" placeholder="2020" min="1900" max="2100">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group" id="garantiGroup">
                                 <label>Garanti Bitiş Tarihi</label>
                                 <input type="date" id="garanti_bitis">
                             </div>
@@ -995,6 +1014,16 @@
 
         function populateViewMode(data) {
             document.getElementById('viewAd').textContent = escapeHtml(data.ad) || '-';
+
+            // Makine kodu - sadece Üretim kategorisinde ve değer varsa göster
+            const makineKoduRow = document.getElementById('viewMakineKoduRow');
+            if (data.kategori === 'Üretim' && data.makine_kodu) {
+                makineKoduRow.style.display = 'flex';
+                document.getElementById('viewMakineKodu').textContent = escapeHtml(data.makine_kodu);
+            } else {
+                makineKoduRow.style.display = 'none';
+            }
+
             document.getElementById('viewKonum').textContent = escapeHtml(data.konum) || '-';
             document.getElementById('viewKategori').textContent = escapeHtml(data.kategori) || '-';
             document.getElementById('viewDurum').textContent = getStatusText(data.durum);
@@ -1031,7 +1060,9 @@
         function populateForm(data) {
             document.getElementById('ad').value = data.ad || '';
             document.getElementById('konum').value = data.konum || '';
+            document.getElementById('konumSelect').value = data.konum || '';
             document.getElementById('kategori').value = data.kategori || '';
+            document.getElementById('makine_kodu').value = data.makine_kodu || '';
             document.getElementById('durum').value = data.durum || 'aktif';
             document.getElementById('sorumlu_adi').value = data.sorumlu_adi || '';
             document.getElementById('sorumlu_telefon').value = data.sorumlu_telefon || '';
@@ -1044,6 +1075,9 @@
 
             // Update status select
             updateStatusSelect(data.durum || 'aktif');
+
+            // Kategori değişikliğini uygula (form alanlarını göster/gizle)
+            onKategoriChange();
 
             // Update photo previews
             for (let i = 0; i < 3; i++) {
@@ -1086,6 +1120,41 @@
             document.querySelectorAll('.status-option').forEach(opt => opt.classList.remove('selected'));
             document.querySelector(`.status-option[data-value="${value}"]`).classList.add('selected');
             document.getElementById('durum').value = value;
+        }
+
+        // Kategori değişikliğinde form alanlarını güncelle
+        function onKategoriChange() {
+            const kategori = document.getElementById('kategori').value;
+            const isUretim = kategori === 'Üretim';
+
+            // Makine Kodu alanı - sadece Üretim kategorisinde göster
+            document.getElementById('makineKoduGroup').style.display = isUretim ? 'block' : 'none';
+
+            // Konum alanı - Üretim için dropdown, diğerleri için text input
+            const konumInput = document.getElementById('konum');
+            const konumSelect = document.getElementById('konumSelect');
+
+            if (isUretim) {
+                konumInput.style.display = 'none';
+                konumSelect.style.display = 'block';
+                // Text input değerini dropdown'a aktar (varsa)
+                if (konumInput.value) {
+                    konumSelect.value = konumInput.value;
+                }
+            } else {
+                konumInput.style.display = 'block';
+                konumSelect.style.display = 'none';
+                // Dropdown değerini text input'a aktar (varsa)
+                if (konumSelect.value) {
+                    konumInput.value = konumSelect.value;
+                }
+            }
+
+            // Telefon alanını gizle/göster
+            document.getElementById('telefonGroup').style.display = isUretim ? 'none' : 'block';
+
+            // Garanti bitiş alanını gizle/göster
+            document.getElementById('garantiGroup').style.display = isUretim ? 'none' : 'block';
         }
 
         // Photo handling
@@ -1245,11 +1314,18 @@
             }
             console.log(`Toplam fotoğraf boyutu: ${Math.round(totalPhotoSize/1024)} KB`);
 
+            // Kategori kontrolü - Üretim için farklı konum değeri
+            const kategori = document.getElementById('kategori').value;
+            const isUretim = kategori === 'Üretim';
+            const konumValue = isUretim
+                ? document.getElementById('konumSelect').value
+                : document.getElementById('konum').value;
+
             const data = {
                 id: machineId,
                 ad: document.getElementById('ad').value,
-                konum: document.getElementById('konum').value,
-                kategori: document.getElementById('kategori').value,
+                konum: konumValue,
+                kategori: kategori,
                 durum: document.getElementById('durum').value,
                 sorumlu_adi: document.getElementById('sorumlu_adi').value,
                 sorumlu_telefon: document.getElementById('sorumlu_telefon').value,
@@ -1259,6 +1335,7 @@
                 uretim_yili: document.getElementById('uretim_yili').value ? parseInt(document.getElementById('uretim_yili').value) : null,
                 garanti_bitis: document.getElementById('garanti_bitis').value || null,
                 notlar: document.getElementById('notlar').value,
+                makine_kodu: document.getElementById('makine_kodu').value || null,
                 fotograf_1: photos[0],
                 fotograf_2: photos[1],
                 fotograf_3: photos[2],
