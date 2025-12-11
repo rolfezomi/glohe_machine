@@ -680,6 +680,38 @@
                 <form id="machineForm">
                     <div class="form-section">
                         <h3>Temel Bilgiler</h3>
+
+                        <div class="form-group">
+                            <label>Kategori</label>
+                            <select id="kategori" onchange="onKategoriChange()">
+                                <option value="">Seçin...</option>
+                                <option value="Üretim">Üretim</option>
+                                <option value="Dolum Makinesi">Dolum Makinesi</option>
+                                <option value="Tank">Tank</option>
+                                <option value="Bilgisayar">Bilgisayar</option>
+                                <option value="Telefon">Telefon</option>
+                                <option value="Yazıcı">Yazıcı</option>
+                                <option value="Tablet">Tablet</option>
+                                <option value="El Terminali">El Terminali</option>
+                                <option value="Araç">Araç</option>
+                                <option value="Diğer">Diğer</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="konumGroup">
+                            <label>Konum</label>
+                            <input type="text" id="konum" placeholder="Örn: A Blok - Kat 2">
+                            <select id="konumSelect" style="display: none;">
+                                <option value="">Seçin...</option>
+                                <option value="Primer-1">Primer-1</option>
+                                <option value="Primer-2">Primer-2</option>
+                                <option value="Primer-3">Primer-3</option>
+                                <option value="Seconder-1">Seconder-1</option>
+                                <option value="Seconder-2">Seconder-2</option>
+                                <option value="Seconder-3">Seconder-3</option>
+                            </select>
+                        </div>
+
                         <div class="form-group">
                             <label>Makine Adı</label>
                             <input type="text" id="ad" placeholder="Örn: CNC Torna #1">
@@ -688,38 +720,6 @@
                         <div class="form-group" id="makineKoduGroup" style="display: none;">
                             <label>Makine Kodu</label>
                             <input type="text" id="makine_kodu" placeholder="Örn: MK-001">
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group" id="konumGroup">
-                                <label>Konum</label>
-                                <input type="text" id="konum" placeholder="Örn: A Blok - Kat 2">
-                                <select id="konumSelect" style="display: none;">
-                                    <option value="">Seçin...</option>
-                                    <option value="Primer-1">Primer-1</option>
-                                    <option value="Primer-2">Primer-2</option>
-                                    <option value="Primer-3">Primer-3</option>
-                                    <option value="Seconder-1">Seconder-1</option>
-                                    <option value="Seconder-2">Seconder-2</option>
-                                    <option value="Seconder-3">Seconder-3</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Kategori</label>
-                                <select id="kategori" onchange="onKategoriChange()">
-                                    <option value="">Seçin...</option>
-                                    <option value="Üretim">Üretim</option>
-                                    <option value="Dolum Makinesi">Dolum Makinesi</option>
-                                    <option value="Tank">Tank</option>
-                                    <option value="Bilgisayar">Bilgisayar</option>
-                                    <option value="Telefon">Telefon</option>
-                                    <option value="Yazıcı">Yazıcı</option>
-                                    <option value="Tablet">Tablet</option>
-                                    <option value="El Terminali">El Terminali</option>
-                                    <option value="Araç">Araç</option>
-                                    <option value="Diğer">Diğer</option>
-                                </select>
-                            </div>
                         </div>
                     </div>
 
