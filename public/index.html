@@ -1902,6 +1902,15 @@
 
         // Show print preview modal
         async function showPrintPreview(qrList) {
+            // Array olduğundan emin ol
+            if (!Array.isArray(qrList)) {
+                console.error('qrList array değil:', qrList);
+                alert('Hata: QR listesi geçersiz');
+                return;
+            }
+
+            console.log('showPrintPreview - QR sayısı:', qrList.length);
+
             currentPrintList = qrList;
             const modal = document.getElementById('previewModal');
             const previewBody = document.getElementById('previewBody');
@@ -1909,12 +1918,18 @@
             // Update info
             const labelsPerPage = 24;
             const pageCount = Math.ceil(qrList.length / labelsPerPage);
+
+            console.log('Hesaplanan sayfa sayısı:', pageCount);
+
             document.getElementById('previewTotalCount').textContent = qrList.length;
             document.getElementById('previewPageCount').textContent = pageCount;
 
             // Show modal with loading
             modal.classList.add('active');
             previewBody.innerHTML = '<div class="loading"><div class="spinner"></div><span>Önizleme oluşturuluyor...</span></div>';
+
+            // Kısa gecikme ile render
+            await new Promise(r => setTimeout(r, 100));
 
             // Generate preview pages
             previewBody.innerHTML = '';
@@ -1926,8 +1941,15 @@
                 const startIdx = p * labelsPerPage;
                 const endIdx = Math.min(startIdx + labelsPerPage, qrList.length);
 
+                console.log(`Sayfa ${p + 1}: index ${startIdx} - ${endIdx}`);
+
                 for (let i = startIdx; i < endIdx; i++) {
                     const qrData = qrList[i];
+                    if (!qrData || !qrData.id) {
+                        console.warn('Geçersiz QR data:', i, qrData);
+                        continue;
+                    }
+
                     const label = document.createElement('div');
                     label.className = 'preview-label';
 
@@ -1948,24 +1970,29 @@
                     page.appendChild(label);
                 }
 
-                // Add empty cells to complete the grid
-                for (let i = endIdx - startIdx; i < labelsPerPage; i++) {
+                // Boş hücreleri ekle (grid düzeni için gerekli)
+                const filledCount = endIdx - startIdx;
+                for (let i = filledCount; i < labelsPerPage; i++) {
                     const emptyLabel = document.createElement('div');
                     emptyLabel.className = 'preview-label empty';
+                    emptyLabel.style.border = '1px dashed #e5e7eb';
                     page.appendChild(emptyLabel);
                 }
 
-                // Add page number
-                const pageNumber = document.createElement('div');
-                pageNumber.style.cssText = 'grid-column: 1 / -1; text-align: center; padding: 8px; font-size: 12px; color: #9ca3af; position: absolute; bottom: 5mm; left: 0; right: 0;';
-                pageNumber.textContent = `Sayfa ${p + 1} / ${pageCount}`;
-
                 const pageWrapper = document.createElement('div');
-                pageWrapper.style.position = 'relative';
-                pageWrapper.appendChild(page);
+                pageWrapper.style.cssText = 'position: relative; margin-bottom: 20px;';
 
+                // Sayfa başlığı
+                const pageHeader = document.createElement('div');
+                pageHeader.style.cssText = 'text-align: center; padding: 10px; font-size: 14px; font-weight: 600; color: #374151; background: #f3f4f6; border-radius: 8px 8px 0 0;';
+                pageHeader.textContent = `Sayfa ${p + 1} / ${pageCount} (${filledCount} etiket)`;
+
+                pageWrapper.appendChild(pageHeader);
+                pageWrapper.appendChild(page);
                 previewBody.appendChild(pageWrapper);
             }
+
+            console.log('Önizleme tamamlandı');
         }
 
         function closePreview() {
