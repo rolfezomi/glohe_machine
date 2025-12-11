@@ -380,6 +380,14 @@
             background: var(--info-light);
             color: var(--info);
         }
+        .qr-status.printed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .qr-status.not-printed {
+            background: var(--warning-light);
+            color: #d97706;
+        }
 
         .qr-item .select-check {
             position: absolute;
@@ -1363,18 +1371,30 @@
                         Daha önce üretilen tüm QR kodlar. Kaybolan etiketleri tekrar yazdırabilirsiniz.
                     </p>
 
-                    <div class="form-row" style="margin-bottom: 20px;">
+                    <div class="form-row" style="margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
                         <select id="archiveFilter" onchange="loadArchive()">
                             <option value="all">Tüm QR Kodlar</option>
                             <option value="available">Atanmamış (Boş)</option>
                             <option value="assigned">Makineye Atanmış</option>
                         </select>
+                        <select id="archivePrintFilter" onchange="loadArchive()">
+                            <option value="all">Tüm Yazdırma Durumları</option>
+                            <option value="printed">Yazdırılmış</option>
+                            <option value="not_printed">Yazdırılmamış</option>
+                        </select>
                         <input type="text" id="archiveSearch" placeholder="🔍 ID ile ara..." oninput="loadArchive()" style="width: 220px;">
+                        <div style="display: flex; gap: 8px; margin-left: auto;">
+                            <button onclick="selectAllArchive()">☑️ Tümünü Seç</button>
+                            <button onclick="selectAllAvailable()" class="btn-success">☑️ Boşta Olanları Seç</button>
+                        </div>
                     </div>
 
                     <div class="selection-toolbar" id="archiveSelectionToolbar">
                         <span>✓ <strong id="archiveSelectedCount">0</strong> adet seçili</span>
-                        <button onclick="printArchiveSelected()">🖨️ Seçilenleri Yazdır</button>
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="deselectAllArchive()" style="background: var(--gray-100); color: var(--gray-700);">✖️ Seçimi Temizle</button>
+                            <button onclick="printArchiveSelected()">🖨️ Seçilenleri Yazdır</button>
+                        </div>
                     </div>
 
                     <div id="archiveGrid" class="qr-grid">
@@ -1689,7 +1709,25 @@
                     div.appendChild(qrImg);
                     div.appendChild(idDiv);
 
-                    if (qrData.makineye_atandi !== undefined) {
+                    // Arşiv modunda durum bilgilerini göster
+                    if (type === 'archive') {
+                        const statusContainer = document.createElement('div');
+                        statusContainer.style.cssText = 'display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; margin-top: 6px;';
+
+                        // Atama durumu
+                        const assignStatusDiv = document.createElement('div');
+                        assignStatusDiv.className = `qr-status ${qrData.makineye_atandi ? 'assigned' : 'available'}`;
+                        assignStatusDiv.textContent = qrData.makineye_atandi ? '✓ Atandı' : '○ Boş';
+                        statusContainer.appendChild(assignStatusDiv);
+
+                        // Yazdırma durumu
+                        const printStatusDiv = document.createElement('div');
+                        printStatusDiv.className = `qr-status ${qrData.yazdirildi ? 'printed' : 'not-printed'}`;
+                        printStatusDiv.textContent = qrData.yazdirildi ? '🖨️ Yazdırıldı' : '📄 Yazdırılmadı';
+                        statusContainer.appendChild(printStatusDiv);
+
+                        div.appendChild(statusContainer);
+                    } else if (qrData.makineye_atandi !== undefined) {
                         const statusDiv = document.createElement('div');
                         statusDiv.className = `qr-status ${qrData.makineye_atandi ? 'assigned' : 'available'}`;
                         statusDiv.textContent = qrData.makineye_atandi ? '✓ Atandı' : '○ Boş';
@@ -1744,6 +1782,7 @@
         // Archive
         async function loadArchive() {
             const filter = document.getElementById('archiveFilter').value;
+            const printFilter = document.getElementById('archivePrintFilter').value;
             const search = document.getElementById('archiveSearch').value.toLowerCase();
             const grid = document.getElementById('archiveGrid');
 
@@ -1756,6 +1795,12 @@
                     query = query.eq('makineye_atandi', false);
                 } else if (filter === 'assigned') {
                     query = query.eq('makineye_atandi', true);
+                }
+
+                if (printFilter === 'printed') {
+                    query = query.eq('yazdirildi', true);
+                } else if (printFilter === 'not_printed') {
+                    query = query.or('yazdirildi.is.null,yazdirildi.eq.false');
                 }
 
                 const { data, error } = await query;
@@ -1774,11 +1819,44 @@
                 }
 
                 await renderQRGrid(grid, archivedQRs, 'archive');
+                updateSelectionToolbar('archive');
 
             } catch (error) {
                 console.error('Arşiv yüklenirken hata:', error);
                 grid.innerHTML = '<div class="empty-state"><p>Arşiv yüklenirken hata oluştu.</p></div>';
             }
+        }
+
+        // Boşta olan QR kodları seç
+        function selectAllAvailable() {
+            archiveSelectedQRs.clear();
+            archivedQRs.forEach(qr => {
+                if (!qr.makineye_atandi) {
+                    archiveSelectedQRs.add(qr.id);
+                }
+            });
+            document.querySelectorAll('#archiveGrid .qr-item').forEach(item => {
+                const qrData = archivedQRs.find(q => q.id === item.dataset.id);
+                const checkbox = item.querySelector('.select-check');
+                if (checkbox && qrData) {
+                    checkbox.checked = !qrData.makineye_atandi;
+                }
+            });
+            updateSelectionToolbar('archive');
+        }
+
+        // Arşiv seçimini temizle
+        function deselectAllArchive() {
+            archiveSelectedQRs.clear();
+            document.querySelectorAll('#archiveGrid .select-check').forEach(cb => cb.checked = false);
+            updateSelectionToolbar('archive');
+        }
+
+        // Arşivdeki tüm QR kodları seç
+        function selectAllArchive() {
+            archivedQRs.forEach(qr => archiveSelectedQRs.add(qr.id));
+            document.querySelectorAll('#archiveGrid .select-check').forEach(cb => cb.checked = true);
+            updateSelectionToolbar('archive');
         }
 
         // Print Preview & Print - Tanex 24'lü A4 Format
