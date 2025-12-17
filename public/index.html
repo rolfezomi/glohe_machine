@@ -1442,6 +1442,7 @@
                     <div class="filter-buttons">
                         <button class="btn-clear" onclick="clearFilters()">Temizle</button>
                         <button class="btn-export" onclick="exportToCSV()">📊 Excel</button>
+                        <button class="btn-export" onclick="exportPhotoReport()" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">📷 Fotoğraf Raporu</button>
                     </div>
                 </div>
 
@@ -2268,6 +2269,230 @@
             link.click();
         }
 
+        // Fotoğraf Raporu - HTML olarak fotoğraflarla birlikte indirme
+        function exportPhotoReport() {
+            // Sadece fotoğrafı olan makineleri filtrele
+            const machinesWithPhotos = filteredMachines.filter(m => m.fotograf);
+
+            if (machinesWithPhotos.length === 0) {
+                return alert('Fotoğrafı olan makine bulunamadı!');
+            }
+
+            const reportDate = new Date().toLocaleDateString('tr-TR', {
+                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+
+            // HTML rapor oluştur
+            const htmlContent = `
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Makine Fotoğraf Raporu - ${reportDate}</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border-radius: 12px;
+        }
+        .header h1 { font-size: 24px; margin-bottom: 5px; }
+        .header p { opacity: 0.9; font-size: 14px; }
+        .summary {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .summary-item { font-size: 14px; }
+        .summary-item strong { color: #10b981; }
+        .machines-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        .machine-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            break-inside: avoid;
+        }
+        .machine-photo {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-bottom: 1px solid #eee;
+        }
+        .machine-info {
+            padding: 15px;
+        }
+        .machine-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .machine-id {
+            font-size: 11px;
+            background: #e5e7eb;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #6b7280;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 13px;
+        }
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .info-label {
+            color: #9ca3af;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .info-value {
+            color: #374151;
+            font-weight: 500;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-aktif { background: #d1fae5; color: #065f46; }
+        .status-bakim { background: #fef3c7; color: #92400e; }
+        .status-arizali { background: #fee2e2; color: #dc2626; }
+        .status-pasif { background: #e5e7eb; color: #4b5563; }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+        @media print {
+            body { background: white; padding: 10px; }
+            .machine-card { box-shadow: none; border: 1px solid #ddd; }
+            .header { background: #10b981 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏭 Makine Fotoğraf Raporu</h1>
+        <p>Glohe Endüstriyel Çözümler | ${reportDate}</p>
+    </div>
+
+    <div class="summary">
+        <div class="summary-item">📊 Toplam Makine: <strong>${filteredMachines.length}</strong></div>
+        <div class="summary-item">📷 Fotoğraflı: <strong>${machinesWithPhotos.length}</strong></div>
+        <div class="summary-item">✅ Aktif: <strong>${machinesWithPhotos.filter(m => m.durum === 'aktif').length}</strong></div>
+        <div class="summary-item">🔧 Bakımda: <strong>${machinesWithPhotos.filter(m => m.durum === 'bakim').length}</strong></div>
+        <div class="summary-item">⚠️ Arızalı: <strong>${machinesWithPhotos.filter(m => m.durum === 'arizali').length}</strong></div>
+    </div>
+
+    <div class="machines-grid">
+        ${machinesWithPhotos.map(m => `
+            <div class="machine-card">
+                <img src="${m.fotograf}" alt="${m.ad}" class="machine-photo" onerror="this.style.display='none'">
+                <div class="machine-info">
+                    <div class="machine-name">
+                        ${escapeHtml(m.ad || 'İsimsiz')}
+                        <span class="machine-id">${m.id}</span>
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Sabit Kıymet Kodu</span>
+                            <span class="info-value">${escapeHtml(m.sabit_kiymet_kodu) || '-'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Konum</span>
+                            <span class="info-value">${escapeHtml(m.konum) || '-'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Kategori</span>
+                            <span class="info-value">${escapeHtml(m.kategori) || '-'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Durum</span>
+                            <span class="status-badge status-${m.durum || 'pasif'}">${getDurumText(m.durum)}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Sorumlu</span>
+                            <span class="info-value">${escapeHtml(m.sorumlu_adi) || '-'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Telefon</span>
+                            <span class="info-value">${escapeHtml(m.sorumlu_telefon) || '-'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Marka</span>
+                            <span class="info-value">${escapeHtml(m.marka) || '-'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Model</span>
+                            <span class="info-value">${escapeHtml(m.model) || '-'}</span>
+                        </div>
+                        <div class="info-item" style="grid-column: span 2;">
+                            <span class="info-label">Seri No</span>
+                            <span class="info-value">${escapeHtml(m.seri_no) || '-'}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('')}
+    </div>
+
+    <div class="footer">
+        <p>Bu rapor otomatik olarak oluşturulmuştur | Glohe Makine Takip Sistemi</p>
+    </div>
+</body>
+</html>`;
+
+            // HTML dosyası olarak indir
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `makine_fotograf_raporu_${new Date().toISOString().split('T')[0]}.html`;
+            link.click();
+        }
+
+        // Durum metni yardımcı fonksiyonu
+        function getDurumText(durum) {
+            const durumlar = {
+                'aktif': 'Aktif',
+                'bakim': 'Bakımda',
+                'arizali': 'Arızalı',
+                'pasif': 'Pasif'
+            };
+            return durumlar[durum] || 'Bilinmiyor';
+        }
+
         // Quick Search - Enter tuşu ile hızlı arama
         function quickSearchMachine(event) {
             if (event.key === 'Enter') {
@@ -2413,6 +2638,8 @@
         window.printSingleQR = printSingleQR;
         window.deleteMachine = deleteMachine;
         window.exportToCSV = exportToCSV;
+        window.exportPhotoReport = exportPhotoReport;
+        window.getDurumText = getDurumText;
         window.quickSearchMachine = quickSearchMachine;
         window.openQRScanner = openQRScanner;
         window.closeQRScanner = closeQRScanner;
