@@ -2484,7 +2484,7 @@
                         <div class="actions">
                             <button class="btn-small" onclick="openMachine('${escapeHtml(m.id)}')">✏️ Düzenle</button>
                             <button class="btn-small btn-success" onclick="printSingleQR('${escapeHtml(m.id)}')">📱 QR</button>
-                            <button class="btn-small btn-danger" onclick="deleteMachine('${escapeHtml(m.id)}')">🗑️</button>
+                            <button class="btn-small btn-danger" onclick="deleteMachine('${escapeHtml(m.id)}', event)">🗑️</button>
                         </div>
                     </td>
                 </tr>
@@ -2499,31 +2499,47 @@
             await showPrintPreview([{ id, url: `${SITE_URL}/makine.html?id=${id}` }]);
         }
 
-        async function deleteMachine(id) {
+        async function deleteMachine(id, e) {
+            console.log('🗑️ deleteMachine çağrıldı, ID:', id);
+
             if (!id) {
                 console.error('Silme hatası: ID bulunamadı');
+                showToast('❌ Silme hatası: ID bulunamadı', 'error');
                 return;
             }
 
-            if (!confirm(`"${id}" ID'li makineyi silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`)) return;
+            if (!confirm(`"${id}" ID'li makineyi silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`)) {
+                console.log('Silme iptal edildi');
+                return;
+            }
 
             // Silme butonunu disable et (çift tıklama önleme)
-            const btn = event?.target;
+            const btn = e?.target?.closest('button') || (e?.target?.tagName === 'BUTTON' ? e.target : null);
             if (btn) {
                 btn.disabled = true;
-                btn.textContent = '⏳';
+                btn.innerHTML = '<span style="animation: spin 1s linear infinite; display: inline-block;">⏳</span>';
             }
 
             try {
+                console.log('Supabase silme işlemi başlatılıyor...');
+
                 // Önce makineyi sil
-                const { error: deleteError } = await supabaseClient
+                const { data: deleteData, error: deleteError } = await supabaseClient
                     .from('makineler')
                     .delete()
-                    .eq('id', id);
+                    .eq('id', id)
+                    .select();
+
+                console.log('Silme sonucu:', { deleteData, deleteError });
 
                 if (deleteError) {
                     console.error('Makine silme hatası:', deleteError);
                     throw new Error(deleteError.message || 'Makine silinemedi');
+                }
+
+                // Silinen kayıt kontrolü
+                if (!deleteData || deleteData.length === 0) {
+                    console.warn('Uyarı: Silinecek kayıt bulunamadı veya zaten silindi');
                 }
 
                 // QR kodunu serbest bırak
@@ -2539,13 +2555,14 @@
 
                 // Başarı mesajı göster
                 showToast('✅ Makine başarıyla silindi', 'success');
+                console.log('✅ Makine silme başarılı');
 
                 // Tabloyu yenile
                 await loadMachines();
 
-            } catch (e) {
-                console.error('Silme işlemi hatası:', e);
-                alert('Silme hatası: ' + (e.message || 'Bilinmeyen hata'));
+            } catch (err) {
+                console.error('Silme işlemi hatası:', err);
+                showToast('❌ Silme hatası: ' + (err.message || 'Bilinmeyen hata'), 'error');
 
                 // Butonu tekrar aktif et
                 if (btn) {
