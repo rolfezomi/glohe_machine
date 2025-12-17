@@ -853,7 +853,7 @@
 
     <script>
         // Supabase client - localStorage kullanarak oturum kalıcılığını sağla
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
             auth: {
                 persistSession: true,
                 storageKey: 'glohe-makine-auth',
@@ -894,7 +894,7 @@
         // Auth check - geliştirilmiş oturum kontrolü (login'e yönlendirmez)
         async function checkAuth() {
             try {
-                const { data: { session }, error } = await supabase.auth.getSession();
+                const { data: { session }, error } = await supabaseClient.auth.getSession();
 
                 if (error) {
                     console.error('Oturum kontrolü hatası:', error);
@@ -935,7 +935,7 @@
             await checkAuth();
 
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('makineler')
                     .select('*')
                     .eq('id', machineId)
@@ -1299,7 +1299,7 @@
 
             // Oturum kontrolü
             try {
-                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
                 if (!session) {
                     alert('Oturumunuz sonlanmış. Lütfen tekrar giriş yapın.');
                     const returnUrl = encodeURIComponent(window.location.href);
@@ -1361,7 +1361,7 @@
 
             try {
                 console.log('Kayıt başlatılıyor...');
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('makineler')
                     .upsert(data);
 
