@@ -137,6 +137,14 @@
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.1); }
         }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(100px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideOutRight {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100px); }
+        }
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             20%, 60% { transform: translateX(-6px); }
@@ -1539,15 +1547,15 @@
 
     <div class="container">
         <div class="tabs">
-            <button class="tab active" onclick="showPanel('qr')"><span>📱 QR Kodlar</span></button>
-            <button class="tab" onclick="showPanel('list')"><span>📋 Makine Listesi</span></button>
+            <button class="tab active" onclick="showPanel('qr', event)"><span>📱 QR Kodlar</span></button>
+            <button class="tab" onclick="showPanel('list', event)"><span>📋 Makine Listesi</span></button>
         </div>
 
         <!-- QR Kod Paneli -->
         <div id="qr" class="panel active">
             <div class="sub-tabs">
-                <button class="sub-tab active" onclick="showSubPanel('generate')">✨ Yeni Üret</button>
-                <button class="sub-tab" onclick="showSubPanel('archive')">📦 QR Arşivi</button>
+                <button class="sub-tab active" onclick="showSubPanel('generate', event)">✨ Yeni Üret</button>
+                <button class="sub-tab" onclick="showSubPanel('archive', event)">📦 QR Arşivi</button>
             </div>
 
             <!-- Yeni QR Üret -->
@@ -1795,20 +1803,44 @@
         }
 
         // Panel switching
-        function showPanel(name) {
+        function showPanel(name, e) {
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.getElementById(name).classList.add('active');
-            event.target.closest('.tab').classList.add('active');
+
+            // Tab butonunu aktif yap - event varsa event'ten, yoksa data-panel attribute'dan bul
+            if (e && e.target) {
+                const tabBtn = e.target.closest('.tab');
+                if (tabBtn) tabBtn.classList.add('active');
+            } else {
+                // Programmatik çağrıda ilgili tab'ı bul ve aktif yap
+                document.querySelectorAll('.tab').forEach(t => {
+                    if (t.textContent.includes(name === 'qr' ? 'QR' : 'Makine')) {
+                        t.classList.add('active');
+                    }
+                });
+            }
 
             if (name === 'list') loadMachines();
         }
 
-        function showSubPanel(name) {
+        function showSubPanel(name, e) {
             document.querySelectorAll('.sub-panel').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
             document.getElementById(name).classList.add('active');
-            event.target.classList.add('active');
+
+            // Sub-tab butonunu aktif yap
+            if (e && e.target) {
+                e.target.classList.add('active');
+            } else {
+                // Programmatik çağrıda ilgili sub-tab'ı bul
+                document.querySelectorAll('.sub-tab').forEach(t => {
+                    if ((name === 'new' && t.textContent.includes('Yeni')) ||
+                        (name === 'archive' && t.textContent.includes('Arşiv'))) {
+                        t.classList.add('active');
+                    }
+                });
+            }
 
             if (name === 'archive') loadArchive();
         }
@@ -2468,14 +2500,93 @@
         }
 
         async function deleteMachine(id) {
-            if (!confirm('Bu makineyi silmek istediğinize emin misiniz?')) return;
-            try {
-                await supabaseClient.from('makineler').delete().eq('id', id);
-                await supabaseClient.from('qr_kodlar').update({ makineye_atandi: false }).eq('id', id);
-                loadMachines();
-            } catch (e) {
-                alert('Silme hatası!');
+            if (!id) {
+                console.error('Silme hatası: ID bulunamadı');
+                return;
             }
+
+            if (!confirm(`"${id}" ID'li makineyi silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`)) return;
+
+            // Silme butonunu disable et (çift tıklama önleme)
+            const btn = event?.target;
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = '⏳';
+            }
+
+            try {
+                // Önce makineyi sil
+                const { error: deleteError } = await supabaseClient
+                    .from('makineler')
+                    .delete()
+                    .eq('id', id);
+
+                if (deleteError) {
+                    console.error('Makine silme hatası:', deleteError);
+                    throw new Error(deleteError.message || 'Makine silinemedi');
+                }
+
+                // QR kodunu serbest bırak
+                const { error: updateError } = await supabaseClient
+                    .from('qr_kodlar')
+                    .update({ makineye_atandi: false })
+                    .eq('id', id);
+
+                if (updateError) {
+                    console.warn('QR kod güncelleme hatası:', updateError);
+                    // Bu hata kritik değil, devam et
+                }
+
+                // Başarı mesajı göster
+                showToast('✅ Makine başarıyla silindi', 'success');
+
+                // Tabloyu yenile
+                await loadMachines();
+
+            } catch (e) {
+                console.error('Silme işlemi hatası:', e);
+                alert('Silme hatası: ' + (e.message || 'Bilinmeyen hata'));
+
+                // Butonu tekrar aktif et
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '🗑️';
+                }
+            }
+        }
+
+        // Toast bildirim fonksiyonu
+        function showToast(message, type = 'info') {
+            // Varsa eski toast'ı kaldır
+            const existingToast = document.querySelector('.toast-notification');
+            if (existingToast) existingToast.remove();
+
+            const toast = document.createElement('div');
+            toast.className = `toast-notification toast-${type}`;
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 24px;
+                right: 24px;
+                padding: 16px 24px;
+                background: ${type === 'success' ? 'linear-gradient(135deg, #10b981, #059669)' :
+                             type === 'error' ? 'linear-gradient(135deg, #ef4444, #dc2626)' :
+                             'linear-gradient(135deg, #3b82f6, #1d4ed8)'};
+                color: white;
+                border-radius: 12px;
+                font-weight: 600;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                z-index: 10000;
+                animation: slideInRight 0.4s ease-out;
+            `;
+
+            document.body.appendChild(toast);
+
+            // 3 saniye sonra kaldır
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease-in forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         }
 
         function exportToCSV() {
@@ -3194,10 +3305,16 @@
             return durumlar[durum] || 'Bilinmiyor';
         }
 
-        // Quick Search - Enter tuşu ile hızlı arama
+        // Quick Search - Debounce ile canlı arama + Enter ile direkt git
+        let searchDebounceTimer = null;
+
         function quickSearchMachine(event) {
+            const query = document.getElementById('quickSearch').value.trim();
+
+            // Enter tuşuna basıldıysa hemen işlem yap
             if (event.key === 'Enter') {
-                const query = document.getElementById('quickSearch').value.trim();
+                clearTimeout(searchDebounceTimer);
+
                 if (!query) return;
 
                 // MKN- ile başlıyorsa direkt makine sayfasına git
@@ -3207,9 +3324,40 @@
                 }
 
                 // Değilse makine listesinde ara
-                showPanel('list');
-                document.getElementById('filterSearch').value = query;
+                performQuickSearch(query);
+                return;
+            }
+
+            // Diğer tuşlar için debounce ile canlı arama
+            clearTimeout(searchDebounceTimer);
+
+            // En az 2 karakter girilince arama yap
+            if (query.length >= 2) {
+                searchDebounceTimer = setTimeout(() => {
+                    performQuickSearch(query);
+                }, 400); // 400ms bekle
+            }
+        }
+
+        function performQuickSearch(query) {
+            // Makine listesi panelini aç
+            showPanel('list');
+
+            // Filter input'a değeri yaz ve aramayı tetikle
+            const filterInput = document.getElementById('filterSearch');
+            if (filterInput) {
+                filterInput.value = query;
                 applyFilters();
+
+                // Sonuç sayısını kontrol et ve bilgi göster
+                setTimeout(() => {
+                    const resultCount = filteredMachines.length;
+                    if (resultCount === 0) {
+                        showToast(`"${query}" için sonuç bulunamadı`, 'info');
+                    } else if (resultCount === 1) {
+                        showToast(`1 makine bulundu`, 'success');
+                    }
+                }, 100);
             }
         }
 
@@ -3342,6 +3490,8 @@
         window.exportPhotoReport = exportPhotoReport;
         window.getDurumText = getDurumText;
         window.quickSearchMachine = quickSearchMachine;
+        window.performQuickSearch = performQuickSearch;
+        window.showToast = showToast;
         window.openQRScanner = openQRScanner;
         window.closeQRScanner = closeQRScanner;
 
