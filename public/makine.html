@@ -628,6 +628,10 @@
                         <span class="value" id="viewMakineKodu">-</span>
                     </div>
                     <div class="info-row">
+                        <span class="label">Sabit Kıymet Kodu</span>
+                        <span class="value" id="viewSabitKiymetKodu">-</span>
+                    </div>
+                    <div class="info-row">
                         <span class="label">Konum</span>
                         <span class="value" id="viewKonum">-</span>
                     </div>
@@ -718,6 +722,11 @@
                         <div class="form-group" id="makineKoduGroup" style="display: none;">
                             <label>Makine Kodu</label>
                             <input type="text" id="makine_kodu" placeholder="Örn: MK-001">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Sabit Kıymet Kodu</label>
+                            <input type="text" id="sabit_kiymet_kodu" placeholder="Örn: SK-12345">
                         </div>
                     </div>
 
@@ -1022,6 +1031,9 @@
                 makineKoduRow.style.display = 'none';
             }
 
+            // Sabit kıymet kodu
+            document.getElementById('viewSabitKiymetKodu').textContent = escapeHtml(data.sabit_kiymet_kodu) || '-';
+
             document.getElementById('viewKonum').textContent = escapeHtml(data.konum) || '-';
             document.getElementById('viewKategori').textContent = escapeHtml(data.kategori) || '-';
             document.getElementById('viewDurum').textContent = getStatusText(data.durum);
@@ -1061,6 +1073,7 @@
             document.getElementById('konumSelect').value = data.konum || '';
             document.getElementById('kategori').value = data.kategori || '';
             document.getElementById('makine_kodu').value = data.makine_kodu || '';
+            document.getElementById('sabit_kiymet_kodu').value = data.sabit_kiymet_kodu || '';
             document.getElementById('durum').value = data.durum || 'aktif';
             document.getElementById('sorumlu_adi').value = data.sorumlu_adi || '';
             document.getElementById('sorumlu_telefon').value = data.sorumlu_telefon || '';
@@ -1334,6 +1347,7 @@
                 garanti_bitis: document.getElementById('garanti_bitis').value || null,
                 notlar: document.getElementById('notlar').value,
                 makine_kodu: document.getElementById('makine_kodu').value || null,
+                sabit_kiymet_kodu: document.getElementById('sabit_kiymet_kodu').value || null,
                 fotograf_1: photos[0],
                 fotograf_2: photos[1],
                 fotograf_3: photos[2],
