@@ -2271,8 +2271,8 @@
 
         // Fotoğraf Raporu - HTML olarak fotoğraflarla birlikte indirme
         function exportPhotoReport() {
-            // Sadece fotoğrafı olan makineleri filtrele
-            const machinesWithPhotos = filteredMachines.filter(m => m.fotograf);
+            // Sadece fotoğrafı olan makineleri filtrele (fotograf_1, fotograf_2, fotograf_3)
+            const machinesWithPhotos = filteredMachines.filter(m => m.fotograf_1 || m.fotograf_2 || m.fotograf_3);
 
             if (machinesWithPhotos.length === 0) {
                 return alert('Fotoğrafı olan makine bulunamadı!');
@@ -2332,11 +2332,19 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             break-inside: avoid;
         }
+        .machine-photos {
+            display: flex;
+            gap: 4px;
+            background: #f3f4f6;
+        }
         .machine-photo {
-            width: 100%;
-            height: 250px;
+            flex: 1;
+            height: 200px;
             object-fit: cover;
             border-bottom: 1px solid #eee;
+        }
+        .machine-photo.single {
+            height: 250px;
         }
         .machine-info {
             padding: 15px;
@@ -2417,9 +2425,14 @@
     </div>
 
     <div class="machines-grid">
-        ${machinesWithPhotos.map(m => `
+        ${machinesWithPhotos.map(m => {
+            const photos = [m.fotograf_1, m.fotograf_2, m.fotograf_3].filter(p => p);
+            const photoClass = photos.length === 1 ? 'machine-photo single' : 'machine-photo';
+            return `
             <div class="machine-card">
-                <img src="${m.fotograf}" alt="${m.ad}" class="machine-photo" onerror="this.style.display='none'">
+                <div class="machine-photos">
+                    ${photos.map(p => `<img src="${p}" alt="${m.ad}" class="${photoClass}" onerror="this.style.display='none'">`).join('')}
+                </div>
                 <div class="machine-info">
                     <div class="machine-name">
                         ${escapeHtml(m.ad || 'İsimsiz')}
@@ -2465,7 +2478,7 @@
                     </div>
                 </div>
             </div>
-        `).join('')}
+        `}).join('')}
     </div>
 
     <div class="footer">
