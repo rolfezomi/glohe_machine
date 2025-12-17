@@ -1521,7 +1521,7 @@
 
     <script>
         // Supabase client - localStorage kullanarak oturum kalıcılığını sağla
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
             auth: {
                 persistSession: true,
                 storageKey: 'glohe-makine-auth',
@@ -1551,7 +1551,7 @@
 
         // Auth
         async function checkAuth() {
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await supabaseClient.auth.getSession();
             if (!session) {
                 window.location.href = '/login.html';
                 return;
@@ -1561,7 +1561,7 @@
         }
 
         async function logout() {
-            await supabase.auth.signOut();
+            await supabaseClient.auth.signOut();
             window.location.href = '/login.html';
         }
 
@@ -1619,7 +1619,7 @@
 
                 // Save to Supabase (hata olsa bile devam et)
                 try {
-                    const { error } = await supabase.from('qr_kodlar').insert(
+                    const { error } = await supabaseClient.from('qr_kodlar').insert(
                         qrData.map(q => ({ id: q.id, olusturma_tarihi: q.olusturma_tarihi }))
                     );
                     if (error) {
@@ -1789,7 +1789,7 @@
             grid.innerHTML = '<div class="loading"><div class="spinner"></div><span>Yükleniyor...</span></div>';
 
             try {
-                let query = supabase.from('qr_kodlar').select('*').order('olusturma_tarihi', { ascending: false });
+                let query = supabaseClient.from('qr_kodlar').select('*').order('olusturma_tarihi', { ascending: false });
 
                 if (filter === 'available') {
                     query = query.eq('makineye_atandi', false);
@@ -2057,7 +2057,7 @@
             // Mark as printed
             try {
                 const ids = qrList.map(q => q.id);
-                await supabase.from('qr_kodlar').update({ yazdirildi: true }).in('id', ids);
+                await supabaseClient.from('qr_kodlar').update({ yazdirildi: true }).in('id', ids);
             } catch (e) {
                 console.error('Yazdırma durumu güncellenemedi:', e);
             }
@@ -2076,7 +2076,7 @@
             emptyEl.style.display = 'none';
 
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('makineler')
                     .select('*')
                     .order('kayit_tarihi', { ascending: false });
@@ -2088,7 +2088,7 @@
                 // Update QR assignment status
                 const machineIds = allMachines.map(m => m.id);
                 if (machineIds.length > 0) {
-                    await supabase.from('qr_kodlar')
+                    await supabaseClient.from('qr_kodlar')
                         .update({ makineye_atandi: true })
                         .in('id', machineIds);
                 }
@@ -2241,8 +2241,8 @@
         async function deleteMachine(id) {
             if (!confirm('Bu makineyi silmek istediğinize emin misiniz?')) return;
             try {
-                await supabase.from('makineler').delete().eq('id', id);
-                await supabase.from('qr_kodlar').update({ makineye_atandi: false }).eq('id', id);
+                await supabaseClient.from('makineler').delete().eq('id', id);
+                await supabaseClient.from('qr_kodlar').update({ makineye_atandi: false }).eq('id', id);
                 loadMachines();
             } catch (e) {
                 alert('Silme hatası!');
@@ -2392,6 +2392,30 @@
                 console.log('Geçersiz QR kod formatı:', data);
             }
         }
+
+        // Global scope için fonksiyon atamaları (onclick handler'lar için)
+        window.logout = logout;
+        window.showPanel = showPanel;
+        window.showSubPanel = showSubPanel;
+        window.generateQRCodes = generateQRCodes;
+        window.selectAll = selectAll;
+        window.deselectAll = deselectAll;
+        window.printSelected = printSelected;
+        window.selectAllArchive = selectAllArchive;
+        window.selectAllAvailable = selectAllAvailable;
+        window.deselectAllArchive = deselectAllArchive;
+        window.printArchiveSelected = printArchiveSelected;
+        window.closePreview = closePreview;
+        window.confirmPrint = confirmPrint;
+        window.clearFilters = clearFilters;
+        window.sortTable = sortTable;
+        window.openMachine = openMachine;
+        window.printSingleQR = printSingleQR;
+        window.deleteMachine = deleteMachine;
+        window.exportToCSV = exportToCSV;
+        window.quickSearchMachine = quickSearchMachine;
+        window.openQRScanner = openQRScanner;
+        window.closeQRScanner = closeQRScanner;
 
         // Init
         checkAuth();
