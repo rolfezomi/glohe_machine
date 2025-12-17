@@ -390,7 +390,7 @@
 
     <script>
         // Supabase client - localStorage kullanarak oturum kalıcılığını sağla
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
             auth: {
                 persistSession: true,
                 storageKey: 'glohe-makine-auth',
@@ -417,7 +417,7 @@
 
         // Zaten giriş yapmışsa yönlendir
         async function checkAuth() {
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
                 redirectAfterLogin();
             }
@@ -438,7 +438,7 @@
             errorDiv.style.display = 'none';
 
             try {
-                const { data, error } = await supabase.auth.signInWithPassword({
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
                     email,
                     password
                 });
