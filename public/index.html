@@ -2708,15 +2708,130 @@
             font-weight: 700;
         }
 
-        /* Print Styles */
+        /* Print Styles - PDF Optimized */
         @media print {
-            body { background: white; }
-            .header { background: var(--primary) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .machine-card { box-shadow: none; border: 1px solid var(--gray-200); break-inside: avoid; }
-            .machine-card:hover { transform: none; }
-            .summary-card { box-shadow: none; border: 1px solid var(--gray-200); }
-            .summary-card:hover { transform: none; }
-            * { animation: none !important; }
+            @page {
+                size: A4;
+                margin: 12mm 10mm;
+            }
+
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+                animation: none !important;
+                transition: none !important;
+            }
+
+            html, body {
+                background: white !important;
+                font-size: 10pt;
+                line-height: 1.3;
+            }
+
+            /* Header - Kompakt */
+            .header {
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+                padding: 20px 16px !important;
+                margin: 0;
+                border-radius: 0 !important;
+                page-break-after: avoid;
+            }
+            .header::before { display: none !important; }
+            .header-icon {
+                width: 44px !important;
+                height: 44px !important;
+                margin-bottom: 10px !important;
+                animation: none !important;
+                box-shadow: none !important;
+            }
+            .header-icon svg { width: 24px !important; height: 24px !important; }
+            .header h1 { font-size: 18pt !important; margin-bottom: 4px !important; }
+            .header-subtitle { font-size: 10pt !important; }
+            .header-date { margin-top: 8px !important; padding: 4px 12px !important; font-size: 9pt !important; }
+
+            /* Container */
+            .container { padding: 16px 0 !important; max-width: 100% !important; }
+
+            /* Summary Cards - Kompakt satır */
+            .summary-grid {
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                gap: 8px !important;
+                margin-bottom: 20px !important;
+                page-break-after: avoid;
+                page-break-inside: avoid;
+            }
+            .summary-card {
+                flex: 1 !important;
+                padding: 10px !important;
+                border-radius: 6px !important;
+                box-shadow: none !important;
+                border: 1px solid #d1d5db !important;
+                background: white !important;
+            }
+            .summary-card::before { height: 3px !important; }
+            .summary-card:hover { transform: none !important; }
+            .summary-icon { width: 28px !important; height: 28px !important; font-size: 14px !important; margin-bottom: 6px !important; border-radius: 6px !important; }
+            .summary-label { font-size: 7pt !important; margin-bottom: 2px !important; }
+            .summary-value { font-size: 16pt !important; }
+
+            /* Section Title */
+            .section-title { margin-bottom: 14px !important; page-break-after: avoid; }
+            .section-title h2 { font-size: 12pt !important; }
+            .section-title-line { display: none !important; }
+            .section-title-badge { padding: 3px 8px !important; font-size: 8pt !important; }
+
+            /* Machines Grid - 2 sütun */
+            .machines-grid {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 12px !important;
+            }
+
+            /* Machine Card */
+            .machine-card {
+                box-shadow: none !important;
+                border: 1px solid #d1d5db !important;
+                border-radius: 10px !important;
+                overflow: hidden !important;
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+            }
+            .machine-card:hover { transform: none !important; box-shadow: none !important; }
+
+            /* Photo Section */
+            .photo-section { background: #f3f4f6 !important; }
+            .machine-photos { gap: 2px !important; }
+            .machine-photo { height: 120px !important; }
+            .machine-photo.single { height: 150px !important; }
+            .machine-card:hover .machine-photo { transform: none !important; }
+            .photo-overlay { display: none !important; }
+            .photo-count { padding: 3px 6px !important; font-size: 8pt !important; top: 6px !important; right: 6px !important; border-radius: 10px !important; }
+            .photo-count svg { width: 10px !important; height: 10px !important; }
+
+            /* Info Section */
+            .machine-info { padding: 12px !important; }
+            .machine-header { margin-bottom: 10px !important; }
+            .machine-name { font-size: 11pt !important; }
+            .machine-id { font-size: 7pt !important; padding: 2px 5px !important; }
+
+            /* Info Grid */
+            .info-grid { gap: 6px !important; }
+            .info-item { padding: 6px !important; border-radius: 4px !important; background: #f9fafb !important; }
+            .info-item:hover { background: #f9fafb !important; }
+            .info-label { font-size: 6pt !important; margin-bottom: 1px !important; }
+            .info-value { font-size: 8pt !important; }
+
+            /* Status Badge */
+            .status-badge { padding: 3px 8px !important; font-size: 8pt !important; border-radius: 20px !important; }
+            .status-badge::before { width: 5px !important; height: 5px !important; }
+
+            /* Footer */
+            .footer { padding: 16px !important; margin-top: 20px !important; page-break-before: avoid; border-top: 1px solid #e5e7eb !important; }
+            .footer-logo { width: 32px !important; height: 32px !important; border-radius: 8px !important; margin-bottom: 8px !important; box-shadow: none !important; }
+            .footer-logo svg { width: 18px !important; height: 18px !important; }
+            .footer-text { font-size: 9pt !important; }
         }
 
         /* Responsive */
