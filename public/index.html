@@ -1660,6 +1660,15 @@
                         </select>
                     </div>
                     <div class="filter-group">
+                        <label>🏢 Firma</label>
+                        <select id="filterFirma" onchange="applyFilters()">
+                            <option value="">Tümü</option>
+                            <option value="Glohe Doğal">Glohe Doğal</option>
+                            <option value="Glohe Bitkisel">Glohe Bitkisel</option>
+                            <option value="BioArge">BioArge</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
                         <label>📍 Konum</label>
                         <select id="filterLocation" onchange="applyFilters()">
                             <option value="">Tümü</option>
@@ -1689,6 +1698,7 @@
                         <thead>
                             <tr>
                                 <th onclick="sortTable('ad')">Makine Adı <span class="sort-icon">↕</span></th>
+                                <th onclick="sortTable('firma')">Firma <span class="sort-icon">↕</span></th>
                                 <th onclick="sortTable('konum')">Konum <span class="sort-icon">↕</span></th>
                                 <th onclick="sortTable('kategori')">Kategori <span class="sort-icon">↕</span></th>
                                 <th onclick="sortTable('durum')">Durum <span class="sort-icon">↕</span></th>
@@ -2384,6 +2394,7 @@
         function applyFilters() {
             const search = document.getElementById('filterSearch').value.toLowerCase();
             const category = document.getElementById('filterCategory').value;
+            const firma = document.getElementById('filterFirma').value;
             const location = document.getElementById('filterLocation').value;
             const status = document.getElementById('filterStatus').value;
 
@@ -2393,10 +2404,12 @@
                     (m.marka || '').toLowerCase().includes(search) ||
                     (m.model || '').toLowerCase().includes(search) ||
                     (m.seri_no || '').toLowerCase().includes(search) ||
-                    (m.id || '').toLowerCase().includes(search);
+                    (m.id || '').toLowerCase().includes(search) ||
+                    (m.firma || '').toLowerCase().includes(search);
 
                 return matchSearch &&
                     (!category || m.kategori === category) &&
+                    (!firma || m.firma === firma) &&
                     (!location || m.konum === location) &&
                     (!status || m.durum === status);
             });
@@ -2408,6 +2421,7 @@
         function clearFilters() {
             document.getElementById('filterSearch').value = '';
             document.getElementById('filterCategory').value = '';
+            document.getElementById('filterFirma').value = '';
             document.getElementById('filterLocation').value = '';
             document.getElementById('filterStatus').value = '';
             applyFilters();
@@ -2475,6 +2489,7 @@
                         <span class="machine-name" onclick="openMachine('${escapeHtml(m.id)}')">${escapeHtml(m.ad) || 'İsimsiz'}</span>
                         <div class="machine-id">${escapeHtml(m.id)}</div>
                     </td>
+                    <td>${escapeHtml(m.firma) || '-'}</td>
                     <td>${escapeHtml(m.konum) || '-'}</td>
                     <td>${m.kategori ? `<span class="badge ${getCategoryClass(m.kategori)}">${escapeHtml(m.kategori)}</span>` : '-'}</td>
                     <td><span class="badge status-${m.durum || 'aktif'}">${getStatusText(m.durum)}</span></td>
@@ -2609,9 +2624,9 @@
         function exportToCSV() {
             if (filteredMachines.length === 0) return alert('Veri yok!');
 
-            const headers = ['ID', 'Ad', 'Sabit Kıymet Kodu', 'Konum', 'Kategori', 'Durum', 'Sorumlu', 'Telefon', 'Marka', 'Model', 'Seri No'];
+            const headers = ['ID', 'Ad', 'Firma', 'Sabit Kıymet Kodu', 'Konum', 'Kategori', 'Durum', 'Sorumlu', 'Telefon', 'Marka', 'Model', 'Seri No'];
             const rows = filteredMachines.map(m => [
-                m.id, m.ad || '', m.sabit_kiymet_kodu || '', m.konum || '', m.kategori || '', m.durum || '',
+                m.id, m.ad || '', m.firma || '', m.sabit_kiymet_kodu || '', m.konum || '', m.kategori || '', m.durum || '',
                 m.sorumlu_adi || '', m.sorumlu_telefon || '', m.marka || '', m.model || '', m.seri_no || ''
             ]);
 

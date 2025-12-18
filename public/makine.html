@@ -937,6 +937,10 @@
                         <span class="value" id="viewSabitKiymetKodu">-</span>
                     </div>
                     <div class="info-row">
+                        <span class="label">Firma</span>
+                        <span class="value" id="viewFirma">-</span>
+                    </div>
+                    <div class="info-row">
                         <span class="label">Konum</span>
                         <span class="value" id="viewKonum">-</span>
                     </div>
@@ -1032,6 +1036,16 @@
                         <div class="form-group">
                             <label>Sabit Kıymet Kodu</label>
                             <input type="text" id="sabit_kiymet_kodu" placeholder="Örn: SK-12345">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Firma</label>
+                            <select id="firma">
+                                <option value="">Seçin...</option>
+                                <option value="Glohe Doğal">Glohe Doğal</option>
+                                <option value="Glohe Bitkisel">Glohe Bitkisel</option>
+                                <option value="BioArge">BioArge</option>
+                            </select>
                         </div>
                     </div>
 
@@ -1339,6 +1353,9 @@
             // Sabit kıymet kodu
             document.getElementById('viewSabitKiymetKodu').textContent = escapeHtml(data.sabit_kiymet_kodu) || '-';
 
+            // Firma
+            document.getElementById('viewFirma').textContent = escapeHtml(data.firma) || '-';
+
             document.getElementById('viewKonum').textContent = escapeHtml(data.konum) || '-';
             document.getElementById('viewKategori').textContent = escapeHtml(data.kategori) || '-';
             document.getElementById('viewDurum').textContent = getStatusText(data.durum);
@@ -1379,6 +1396,7 @@
             document.getElementById('kategori').value = data.kategori || '';
             document.getElementById('makine_kodu').value = data.makine_kodu || '';
             document.getElementById('sabit_kiymet_kodu').value = data.sabit_kiymet_kodu || '';
+            document.getElementById('firma').value = data.firma || '';
             document.getElementById('durum').value = data.durum || 'aktif';
             document.getElementById('sorumlu_adi').value = data.sorumlu_adi || '';
             document.getElementById('sorumlu_telefon').value = data.sorumlu_telefon || '';
@@ -1643,6 +1661,7 @@
                 konum: konumValue,
                 kategori: kategori,
                 durum: document.getElementById('durum').value,
+                firma: document.getElementById('firma').value || null,
                 sorumlu_adi: document.getElementById('sorumlu_adi').value,
                 sorumlu_telefon: document.getElementById('sorumlu_telefon').value,
                 marka: document.getElementById('marka').value,
