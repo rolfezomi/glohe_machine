@@ -2624,10 +2624,11 @@
         function exportToCSV() {
             if (filteredMachines.length === 0) return alert('Veri yok!');
 
-            const headers = ['ID', 'Ad', 'Firma', 'Sabit Kıymet Kodu', 'Konum', 'Kategori', 'Durum', 'Sorumlu', 'Telefon', 'Marka', 'Model', 'Seri No'];
+            const headers = ['ID', 'Ad', 'Firma', 'Sabit Kıymet Kodu', 'Konum', 'Kategori', 'Durum', 'Sorumlu', 'Telefon', 'Marka', 'Model', 'Seri No', 'Açıklama'];
             const rows = filteredMachines.map(m => [
                 m.id, m.ad || '', m.firma || '', m.sabit_kiymet_kodu || '', m.konum || '', m.kategori || '', m.durum || '',
-                m.sorumlu_adi || '', m.sorumlu_telefon || '', m.marka || '', m.model || '', m.seri_no || ''
+                m.sorumlu_adi || '', m.sorumlu_telefon || '', m.marka || '', m.model || '', m.seri_no || '',
+                (m.notlar || '').replace(/"/g, '""').replace(/\n/g, ' ')
             ]);
 
             let csv = '\uFEFF' + headers.join(';') + '\n';
