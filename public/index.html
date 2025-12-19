@@ -2899,8 +2899,8 @@
         /* Machines Grid */
         .machines-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-            gap: 28px;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
         }
 
         /* Machine Card */
@@ -2930,12 +2930,12 @@
         }
         .machine-photo {
             flex: 1;
-            height: 220px;
+            height: 140px;
             object-fit: cover;
             transition: transform 0.5s ease;
         }
         .machine-photo.single {
-            height: 280px;
+            height: 160px;
         }
         .machine-card:hover .machine-photo {
             transform: scale(1.03);
@@ -2967,26 +2967,26 @@
 
         /* Info Section */
         .machine-info {
-            padding: 24px;
+            padding: 16px;
         }
         .machine-header {
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
         .machine-name {
-            font-size: 20px;
+            font-size: 16px;
             font-weight: 700;
             color: var(--gray-800);
             line-height: 1.3;
         }
         .machine-id {
-            font-size: 11px;
+            font-size: 10px;
             font-family: 'SF Mono', Monaco, monospace;
             background: var(--gray-100);
             color: var(--gray-500);
-            padding: 4px 10px;
+            padding: 3px 8px;
             border-radius: 6px;
             font-weight: 500;
             white-space: nowrap;
@@ -2996,12 +2996,12 @@
         .info-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 16px;
+            gap: 8px;
         }
         .info-item {
-            padding: 12px;
+            padding: 8px 10px;
             background: var(--gray-50);
-            border-radius: 12px;
+            border-radius: 8px;
             transition: all 0.2s ease;
         }
         .info-item:hover {
@@ -3011,15 +3011,15 @@
             grid-column: span 2;
         }
         .info-label {
-            font-size: 11px;
+            font-size: 9px;
             font-weight: 600;
             color: var(--gray-400);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
         .info-value {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 600;
             color: var(--gray-700);
         }
@@ -3028,16 +3028,16 @@
         .status-badge {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 6px 14px;
-            border-radius: 30px;
-            font-size: 13px;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
             font-weight: 600;
         }
         .status-badge::before {
             content: '';
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             background: currentColor;
         }
@@ -3175,8 +3175,8 @@
             /* Photo Section */
             .photo-section { background: #f3f4f6 !important; }
             .machine-photos { gap: 2px !important; }
-            .machine-photo { height: 120px !important; }
-            .machine-photo.single { height: 150px !important; }
+            .machine-photo { height: 90px !important; }
+            .machine-photo.single { height: 100px !important; }
             .machine-card:hover .machine-photo { transform: none !important; }
             .photo-overlay { display: none !important; }
             .photo-count { padding: 3px 6px !important; font-size: 8pt !important; top: 6px !important; right: 6px !important; border-radius: 10px !important; }
@@ -3292,15 +3292,16 @@
                             '<span class="machine-id">' + m.id + '</span>' +
                         '</div>' +
                         '<div class="info-grid">' +
-                            '<div class="info-item"><div class="info-label">Sabit Kıymet Kodu</div><div class="info-value">' + (escapeHtml(m.sabit_kiymet_kodu) || '-') + '</div></div>' +
+                            '<div class="info-item"><div class="info-label">Firma</div><div class="info-value">' + (escapeHtml(m.firma) || '-') + '</div></div>' +
+                            '<div class="info-item"><div class="info-label">Durum</div><span class="status-badge status-' + (m.durum || 'pasif') + '">' + getDurumText(m.durum) + '</span></div>' +
+                            '<div class="info-item"><div class="info-label">Makine Kodu</div><div class="info-value">' + (escapeHtml(m.makine_kodu) || '-') + '</div></div>' +
+                            '<div class="info-item"><div class="info-label">Sabit Kıymet</div><div class="info-value">' + (escapeHtml(m.sabit_kiymet_kodu) || '-') + '</div></div>' +
                             '<div class="info-item"><div class="info-label">Konum</div><div class="info-value">' + (escapeHtml(m.konum) || '-') + '</div></div>' +
                             '<div class="info-item"><div class="info-label">Kategori</div><div class="info-value">' + (escapeHtml(m.kategori) || '-') + '</div></div>' +
-                            '<div class="info-item"><div class="info-label">Durum</div><span class="status-badge status-' + (m.durum || 'pasif') + '">' + getDurumText(m.durum) + '</span></div>' +
-                            '<div class="info-item"><div class="info-label">Sorumlu</div><div class="info-value">' + (escapeHtml(m.sorumlu_adi) || '-') + '</div></div>' +
-                            '<div class="info-item"><div class="info-label">Telefon</div><div class="info-value">' + (escapeHtml(m.sorumlu_telefon) || '-') + '</div></div>' +
                             '<div class="info-item"><div class="info-label">Marka</div><div class="info-value">' + (escapeHtml(m.marka) || '-') + '</div></div>' +
                             '<div class="info-item"><div class="info-label">Model</div><div class="info-value">' + (escapeHtml(m.model) || '-') + '</div></div>' +
-                            '<div class="info-item full-width"><div class="info-label">Seri No</div><div class="info-value">' + (escapeHtml(m.seri_no) || '-') + '</div></div>' +
+                            '<div class="info-item"><div class="info-label">Seri No</div><div class="info-value">' + (escapeHtml(m.seri_no) || '-') + '</div></div>' +
+                            '<div class="info-item"><div class="info-label">Sorumlu</div><div class="info-value">' + (escapeHtml(m.sorumlu_adi) || '-') + '</div></div>' +
                         '</div>' +
                     '</div>' +
                 '</div>';
